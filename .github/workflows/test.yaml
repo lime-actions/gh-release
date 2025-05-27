@@ -17,16 +17,19 @@ jobs:
       with:
         sparse-checkout: ''
         sparse-checkout-cone-mode: false
+    - name: Test commit
+      run: |
+        touch test
+        git add test
+        git commit -m 'test1.test2.test3'
     - name: Release from commit
       uses: ./
       with:
         dry-run: true
     - name: Check
       run: |
-        TAG="$(git log -1 --pretty=format:"%s")"
-        if ! git rev-parse "$TAG" >/dev/null 2>&1
+        if ! git rev-parse 'test1.test2.test3' >/dev/null 2>&1
         then
-          echo "$TAG"
           exit 101
         fi
     - name: Reset tags
