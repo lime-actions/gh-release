@@ -21,12 +21,10 @@ inputs:
     description: Whether to do a draft release
     required: false
     type: boolean
-    default: false
   release-candidate:
     description: Whether this is a release candidate
     required: false
     type: boolean
-    default: false
   release-candidate-suffix:
     description: Suffix to be used with release candidate tags
     required: false
@@ -46,7 +44,6 @@ inputs:
     description: Whether to not do any permanent changes
     required: false
     type: boolean
-    default: false
 outputs:
   tag:
     description: Tag created
