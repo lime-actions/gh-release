@@ -1,0 +1,82 @@
+name: PR from Version
+description: Create PR from version in the repository
+
+on:
+  workflow_call:
+    inputs:
+      version-from:
+        description: Method of getting the version
+        required: true
+        type: string
+
+      version-path:
+        description: Path to the file containing the version
+        required: false
+        type: string
+        default: ''
+
+      head:
+        description: Source branch name
+        required: false
+        type: string
+        default: ''
+
+      base:
+        description: Target branch name
+        required: false
+        type: string
+        default: ''
+
+      prefix:
+        description: PR prefix
+        required: false
+        type: string
+        default: 'v'
+
+jobs:
+  create-pr:
+    permissions:
+       pull-requests: write
+       contents: read
+    runs-on: ubuntu-latest
+    steps:
+    - name: Prepare base ref
+      id: refs
+      env:
+        GH_TOKEN: ${{ github.token }}
+      shell: bash
+      run: |
+        BASE_NAME="${{ inputs.base || github.event.repository.default_branch }}"
+        HEAD_NAME="${{ inputs.head || github.ref_name }}"
+
+        if [ $(gh pr list \
+                --repo "$GITHUB_REPOSITORY" \
+                --head "$HEAD_NAME" \
+                --base "$BASE_NAME" \
+                --json title \
+                --jq "length") == 0 ]; then
+          echo "head=refs/heads/$HEAD_NAME" >> "$GITHUB_OUTPUT"
+          echo "base=refs/heads/$BASE_NAME" >> "$GITHUB_OUTPUT"
+        fi
+    - name: Checkout
+      if: ${{ steps.refs.outputs.base }}
+      uses: actions/checkout@v4
+    - name: Get version
+      if: ${{ steps.refs.outputs.base }}
+      id: version
+      uses: lime-actions/version@latest
+      with:
+        from: ${{ inputs.version-from }}
+        source: ${{ inputs.version-path }}
+    - name: Create PR
+      if: ${{ steps.refs.outputs.base }}
+      env:
+        GH_TOKEN: ${{ github.token }}
+      shell: bash
+      run: |
+        gh pr create \
+          --head "${{ steps.refs.outputs.head }}" \
+          --base "${{ steps.refs.outputs.base }}" \
+          --title "${{ inputs.prefix }}${{ steps.version.outputs.version }}" \
+          --body "$(git log -1 --pretty=format:'%b')" \
+          --draft

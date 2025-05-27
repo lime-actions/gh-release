@@ -1,0 +1,43 @@
+name: Update PR title
+description: Update PR title with the version of the contents
+
+on:
+  pull_request:
+    types:
+    - opened
+    - synchronize
+    paths:
+    - 'pyproject.toml'
+
+jobs:
+  update-pr-title:
+    if: ${{ github.event.pull_request.base.ref
+            == github.event.repository.default_branch }}
+    permissions:
+       pull-requests: write
+       contents: read
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Get version
+      id: version
+      uses: lime-actions/version@latest
+      with:
+        version-from: 'version-file'
+    - name: Format title
+      id: title
+      run: |
+        echo "title=${{ github.event.pull_request.base.ref
+                        == github.event.repository.default_branch
+                        && 'v'
+                        || format('{0} v', github.event.pull_request.head.ref)
+                        }}${{ steps.version.outputs.version }}" \
+        >> "$GITHUB_OUTPUT"
+    - name: Edit PR
+      if: ${{ steps.title.outputs.title != github.event.pull_request.title}}
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh pr edit ${{ github.event.number }} \
+          --title  "${{ steps.title.outputs.title }}"

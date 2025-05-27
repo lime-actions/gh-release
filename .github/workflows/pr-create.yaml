@@ -1,0 +1,24 @@
+name: Create PR
+description: Create PR
+on:
+  push:
+
+jobs:
+  create-pr:
+    if: github.ref_name != github.event.repository.default_branch
+    uses: ./.github/workflows/create_pr_from_version.yaml
+    permissions:
+       pull-requests: write
+       contents: read
+    with:
+      version-from: 'version-file'
+      base: ${{ github.ref_name == 'dev'
+                && 'release-candidate'
+                || github.ref_name == 'release-candidate'
+                && github.event.repository.default_branch
+                || 'dev' }}
+      prefix: ${{ github.ref_name == 'dev'
+                  && 'RC v'
+                  || github.ref_name == 'release-candidate'
+                  && 'v'
+                  || format('{0} v', github.ref_name) }}

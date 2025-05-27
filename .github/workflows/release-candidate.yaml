@@ -1,0 +1,28 @@
+name: Ready for Review
+description: No longer in draft state
+on:
+  pull_request:
+    types:
+    - ready_for_review
+    - synchronize
+
+jobs:
+  release-candidate:
+    if: github.event.pull_request.base.ref
+        == github.event.repository.default_branch
+        && github.event.action == 'ready_for_review'
+        || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Get version
+      id: version
+      uses: lime-actions/version@latest
+      with:
+        from: 'version-file'
+    - name: Do GitHub prerelease
+      uses: ./
+      with:
+        version: ${{ steps.version.outputs.version }}
+        release-candidate: True

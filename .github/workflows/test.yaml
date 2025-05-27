@@ -1,0 +1,82 @@
+name: Test
+description: Run tests for the action
+on:
+  push:
+    paths:
+    - 'action.yaml'
+    - '.github/workflows/test.yaml'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Release from commit
+      uses: ./
+      with:
+        version: 'test1.test2.test3'
+        dry-run: true
+    - name: Check
+      run: |
+        if git ref-parse "$(git log -1 --pretty=format:"%s")" >/dev/null 2>&1
+        then; exit 1
+        fi
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Release from version
+      id: release-from-version
+      uses: ./
+      with:
+        version: 'test1.test2.test3'
+        dry-run: true
+    - name: Check
+      run: |
+        if [ ${{ steps.release-from-version.outputs.tag }} == 'test1.test2.test3' ]; then; exit 1
+        elif git ref-parse 'test1.test2.test3' >/dev/null 2>&1; then; exit 1
+        elif git ref-parse 'test1.test2' >/dev/null 2>&1; then; exit 1
+        elif git ref-parse 'test1' >/dev/null 2>&1; then; exit 1
+        elif git ref-parse 'latest' >/dev/null 2>&1; then; exit 1
+        fi
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Release
+      uses: ./
+      with:
+        version: 'test1.test2.test3'
+        dry-run: true
+        latest-ref: 'new'
+    - name: Check
+      run: |
+        if git ref-parse 'new' >/dev/null 2>&1; then; exit 1
+        fi
+
+  release-candidate:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Release
+      uses: ./
+      with:
+        version: 'test1.test2.test3'
+        release-candidate: true
+        dry-run: true
+    - name: Check
+      run: |
+        if git ref-parse 'test1.test2.test3.rc1' >/dev/null 2>&1; then; exit 1
+        elif git ref-parse 'latest-rc' >/dev/null 2>&1; then; exit 1
+        fi
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Release
+      id: release-suffix
+      uses: ./
+      with:
+        version: 'test1.test2.test3'
+        release-candidate: true
+        release-candidate-suffix: 'RC'
+        dry-run: true
+    - name: Fail
+      if: steps.release-suffix.ouputs.tag != 'test1.test2.test3.RC1'
+      run: exit 1
