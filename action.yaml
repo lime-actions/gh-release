@@ -75,6 +75,10 @@ runs:
       MESSAGE="$(git log -1 --pretty=format:"%b")"' }}
 
       ${{ inputs.release-candidate
+          && format('echo "{0}"', inputs.release-candidate)
+          || ''}}
+
+      ${{ inputs.release-candidate
           && format(
       'N=1
       while
