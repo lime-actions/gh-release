@@ -68,15 +68,17 @@ runs:
       git config user.name ${{ inputs.git-name }}
       git config user.email ${{ inputs.git-email }}
 
-      FULL_TAG=${{ inputs.tag || '$(git log -1 --pretty=format:"%s")'}}
-
-      ${{ !inputs.tag && 'MESSAGE="$(git log -1 --pretty=format:"%b")"' }}
+      ${{ inputs.tag
+          && format('FULL_TAG="{0}"', inputs.tag)
+          || '
+      FULL_TAG="$(git log -1 --pretty=format:"%s")"
+      MESSAGE="$(git log -1 --pretty=format:"%b")"'}}
 
       ${{ inputs.release-candidate
           && '
       $N=1
       while
-        RC_TAG="$FULL_TAG.${{ release-candidate-suffix }}$N";
+        RC_TAG="$FULL_TAG.${{ release-candidate-suffix }}$N"
         git ref-parse "$RC_TAG" >/dev/null 2>&1
       do
         ((N++))
