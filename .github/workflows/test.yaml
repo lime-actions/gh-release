@@ -101,4 +101,6 @@ jobs:
         dry-run: true
     - name: Fail
       if: steps.release-suffix.ouputs.tag != 'test1.test2.test3.RC1'
-      run: exit 101
+      run: |
+        echo "${{ steps.release-suffix.ouputs.tag }}"
+        exit 101
