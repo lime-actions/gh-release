@@ -83,7 +83,7 @@ runs:
       do
         ((N++))
       done
-      FULL_TAG=$RC_TAG', release-candidate-suffix
+      FULL_TAG=$RC_TAG', release-candidate-suffix)
           || '' }}
 
       echo "tag=$FULL_TAG" >> "$GITHUB_OUTPUT"

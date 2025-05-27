@@ -35,10 +35,10 @@ jobs:
     - name: Check
       run: |
         if [ ${{ steps.release-from-version.outputs.tag }} == 'test1.test2.test3' ]; then; exit 1
-        elif git ref-parse 'test1.test2.test3' >/dev/null 2>&1; then; exit 1
-        elif git ref-parse 'test1.test2' >/dev/null 2>&1; then; exit 1
-        elif git ref-parse 'test1' >/dev/null 2>&1; then; exit 1
-        elif git ref-parse 'latest' >/dev/null 2>&1; then; exit 1
+        elif git ref-parse 'test1.test2.test3' >/dev/null 2>&1; then; exit 2
+        elif git ref-parse 'test1.test2' >/dev/null 2>&1; then; exit 3
+        elif git ref-parse 'test1' >/dev/null 2>&1; then; exit 4
+        elif git ref-parse 'latest' >/dev/null 2>&1; then; exit 5
         fi
     - name: Checkout
       uses: actions/checkout@v4
@@ -69,7 +69,7 @@ jobs:
     - name: Check
       run: |
         if git ref-parse 'test1.test2.test3.rc1' >/dev/null 2>&1; then; exit 1
-        elif git ref-parse 'latest-rc' >/dev/null 2>&1; then; exit 1
+        elif git ref-parse 'latest-rc' >/dev/null 2>&1; then; exit 2
         fi
     - name: Checkout
       uses: actions/checkout@v4
