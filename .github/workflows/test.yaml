@@ -14,8 +14,9 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      sparse-checkout: ''
-      sparse-checkout-cone-mode: false
+      with:
+        sparse-checkout: ''
+        sparse-checkout-cone-mode: false
     - name: Release from commit
       uses: ./
       with:
@@ -61,14 +62,11 @@ jobs:
       run: |
         if git ref-parse 'new' >/dev/null 2>&1; then; exit 1
         fi
-
-  release-candidate:
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    - name: Reset tags
+      run: |
+        comm -23 <(git tag | sort) <(git ls-remote --tags origin | cut -f2 \
+        | sed 's#refs/tags/##' | sort) \
+        | xargs -n 1 git tag -d
     - name: Release
       uses: ./
       with:
