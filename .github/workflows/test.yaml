@@ -24,8 +24,10 @@ jobs:
         dry-run: true
     - name: Check
       run: |
-        if git rev-parse "$(git log -1 --pretty=format:"%s")" >/dev/null 2>&1
+        TAG="$(git log -1 --pretty=format:"%s")"
+        if ! git rev-parse "$TAG" >/dev/null 2>&1
         then
+          echo "$TAG"
           exit 101
         fi
     - name: Reset tags
@@ -41,11 +43,11 @@ jobs:
         dry-run: true
     - name: Check
       run: |
-        if [ ${{ steps.release-from-version.outputs.tag }} != 'test1.test2.test3' ]; then exit 101
-        elif git rev-parse 'test1.test2.test3' >/dev/null 2>&1; then exit 102
-        elif git rev-parse 'test1.test2' >/dev/null 2>&1; then exit 103
-        elif git rev-parse 'test1' >/dev/null 2>&1; then exit 104
-        elif git rev-parse 'latest' >/dev/null 2>&1; then exit 105
+        if [ '${{ steps.release-from-version.outputs.tag }}' != 'test1.test2.test3' ]; then exit 101
+        elif ! git rev-parse 'test1.test2.test3' >/dev/null 2>&1; then exit 102
+        elif ! git rev-parse 'test1.test2' >/dev/null 2>&1; then exit 103
+        elif ! git rev-parse 'test1' >/dev/null 2>&1; then exit 104
+        elif ! git rev-parse 'latest' >/dev/null 2>&1; then exit 105
         fi
     - name: Reset tags
       run: |
@@ -60,7 +62,7 @@ jobs:
         latest-ref: 'new'
     - name: Check
       run: |
-        if git rev-parse 'new' >/dev/null 2>&1; then exit 101
+        if ! git rev-parse 'new' >/dev/null 2>&1; then exit 101
         fi
     - name: Reset tags
       run: |
@@ -75,9 +77,9 @@ jobs:
         dry-run: true
     - name: Check
       run: |
-        if git rev-parse 'test1.test2.test3.rc1' >/dev/null 2>&1; then
+        if ! git rev-parse 'test1.test2.test3.rc1' >/dev/null 2>&1; then
           exit 101
-        elif git rev-parse 'latest-rc' >/dev/null 2>&1; then
+        elif ! git rev-parse 'latest-rc' >/dev/null 2>&1; then
           exit 102
         fi
     - name: Reset tags
