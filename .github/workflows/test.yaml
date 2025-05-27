@@ -8,7 +8,7 @@ on:
 
 jobs:
   release:
-    premissions:
+    permissions:
       contents: read
     runs-on: ubuntu-latest
     steps:
@@ -54,7 +54,7 @@ jobs:
         fi
 
   release-candidate:
-    premissions:
+    permissions:
       contents: read
     runs-on: ubuntu-latest
     steps:
