@@ -14,6 +14,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+      sparse-checkout: ''
+      sparse-checkout-cone-mode: false
     - name: Release from commit
       uses: ./
       with:
@@ -25,8 +27,11 @@ jobs:
         then
           exit 101
         fi
-    - name: Checkout
-      uses: actions/checkout@v4
+    - name: Reset tags
+      run: |
+        comm -23 <(git tag | sort) <(git ls-remote --tags origin | cut -f2 \
+        | sed 's#refs/tags/##' | sort) \
+        | xargs -n 1 git tag -d
     - name: Release from version
       id: release-from-version
       uses: ./
@@ -35,14 +40,17 @@ jobs:
         dry-run: true
     - name: Check
       run: |
-        if [ ${{ steps.release-from-version.outputs.tag }} == 'test1.test2.test3' ]; then; exit 101
+        if [ ${{ steps.release-from-version.outputs.tag }} != 'test1.test2.test3' ]; then; exit 101
         elif git ref-parse 'test1.test2.test3' >/dev/null 2>&1; then; exit 102
         elif git ref-parse 'test1.test2' >/dev/null 2>&1; then; exit 103
         elif git ref-parse 'test1' >/dev/null 2>&1; then; exit 104
         elif git ref-parse 'latest' >/dev/null 2>&1; then; exit 105
         fi
-    - name: Checkout
-      uses: actions/checkout@v4
+    - name: Reset tags
+      run: |
+        comm -23 <(git tag | sort) <(git ls-remote --tags origin | cut -f2 \
+        | sed 's#refs/tags/##' | sort) \
+        | xargs -n 1 git tag -d
     - name: Release
       uses: ./
       with:
@@ -74,8 +82,11 @@ jobs:
         elif git ref-parse 'latest-rc' >/dev/null 2>&1; then
           exit 102
         fi
-    - name: Checkout
-      uses: actions/checkout@v4
+    - name: Reset tags
+      run: |
+        comm -23 <(git tag | sort) <(git ls-remote --tags origin | cut -f2 \
+        | sed 's#refs/tags/##' | sort) \
+        | xargs -n 1 git tag -d
     - name: Release
       id: release-suffix
       uses: ./

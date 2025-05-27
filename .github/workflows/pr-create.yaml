@@ -12,6 +12,7 @@ jobs:
        contents: read
     with:
       version-from: 'version-file'
+      version-path: 'version.txt'
       base: ${{ github.ref_name == 'dev'
                 && 'release-candidate'
                 || github.ref_name == 'release-candidate'
