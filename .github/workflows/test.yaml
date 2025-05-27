@@ -8,6 +8,8 @@ on:
 
 jobs:
   release:
+    premissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -15,7 +17,7 @@ jobs:
     - name: Release from commit
       uses: ./
       with:
-        version: 'test1.test2.test3'
+        tag: 'test1.test2.test3'
         dry-run: true
     - name: Check
       run: |
@@ -28,7 +30,7 @@ jobs:
       id: release-from-version
       uses: ./
       with:
-        version: 'test1.test2.test3'
+        tag: 'test1.test2.test3'
         dry-run: true
     - name: Check
       run: |
@@ -43,7 +45,7 @@ jobs:
     - name: Release
       uses: ./
       with:
-        version: 'test1.test2.test3'
+        tag: 'test1.test2.test3'
         dry-run: true
         latest-ref: 'new'
     - name: Check
@@ -52,6 +54,8 @@ jobs:
         fi
 
   release-candidate:
+    premissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -59,7 +63,7 @@ jobs:
     - name: Release
       uses: ./
       with:
-        version: 'test1.test2.test3'
+        tag: 'test1.test2.test3'
         release-candidate: true
         dry-run: true
     - name: Check
@@ -73,7 +77,7 @@ jobs:
       id: release-suffix
       uses: ./
       with:
-        version: 'test1.test2.test3'
+        tag: 'test1.test2.test3'
         release-candidate: true
         release-candidate-suffix: 'RC'
         dry-run: true

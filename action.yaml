@@ -73,14 +73,15 @@ runs:
       ${{ !inputs.tag && 'MESSAGE="$(git log -1 --pretty=format:"%b")"' }}
 
       ${{ inputs.release-candidate
-          && '$N=1;
-              while;
-                RC_TAG="$FULL_TAG.${{ release-candidate-suffix }}$N";
-                git ref-parse "$RC_TAG" >/dev/null 2>&1;
-              do;
-                ((N++));
-              done;
-              FULL_TAG=$RC_TAG'
+          && '
+      $N=1
+      while
+        RC_TAG="$FULL_TAG.${{ release-candidate-suffix }}$N";
+        git ref-parse "$RC_TAG" >/dev/null 2>&1
+      do
+        ((N++))
+      done
+      FULL_TAG=$RC_TAG'
           || ''
           }}
 
@@ -95,16 +96,17 @@ runs:
         --force --message="$MESSAGE"
 
       ${{ !inputs.release-candidate
-          && 'TAG=$FULL_TAG;
-              while;
-                TAG=$(sed -nE \
-                        --expression=''s/([^\.]+(\.[^\.]+)*)\.[^\.]+/\1/p'' \
-                    <<< "$TAG");
-                [ -n "$TAG" ];
-            do;
-              echo $TAG;
-              git tag "$TAG" --force;
-            done'
+          && '
+      TAG=$FULL_TAG;
+      while
+        TAG=$(sed -nE \
+                --expression=''s/([^\.]+(\.[^\.]+)*)\.[^\.]+/\1/p'' \
+              <<< "$TAG")
+        [ -n "$TAG" ]
+      do
+        echo $TAG
+        git tag "$TAG" --force
+      done'
           || '' }}
 
       git push origin --tags --force ${{ inputs.dry-run && '--dry-run' || '' }}
