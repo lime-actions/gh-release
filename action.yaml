@@ -75,15 +75,15 @@ runs:
       MESSAGE="$(git log -1 --pretty=format:"%b")"' }}
 
       ${{ inputs.release-candidate
-          &&
+          && format(
       'N=1
       while
-        RC_TAG="$FULL_TAG.${{ release-candidate-suffix }}$N"
+        RC_TAG="$FULL_TAG.{0}$N"
         git ref-parse "$RC_TAG" >/dev/null 2>&1
       do
         ((N++))
       done
-      FULL_TAG=$RC_TAG'
+      FULL_TAG=$RC_TAG', release-candidate-suffix
           || '' }}
 
       echo "tag=$FULL_TAG" >> "$GITHUB_OUTPUT"

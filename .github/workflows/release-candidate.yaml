@@ -1,5 +1,5 @@
-name: Ready for Review
-description: No longer in draft state
+name: Release Candidate
+description: Creating a release candidate
 on:
   pull_request:
     types:
