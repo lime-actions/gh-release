@@ -9,7 +9,7 @@ on:
 jobs:
   release:
     permissions:
-      contents: read
+      contents: write
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -55,7 +55,7 @@ jobs:
 
   release-candidate:
     permissions:
-      contents: read
+      contents: write
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
