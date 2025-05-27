@@ -70,13 +70,13 @@ runs:
 
       ${{ inputs.tag
           && format('FULL_TAG="{0}"', inputs.tag)
-          || '
-      FULL_TAG="$(git log -1 --pretty=format:"%s")"
-      MESSAGE="$(git log -1 --pretty=format:"%b")"'}}
+          ||
+      'FULL_TAG="$(git log -1 --pretty=format:"%s")"
+      MESSAGE="$(git log -1 --pretty=format:"%b")"' }}
 
       ${{ inputs.release-candidate
-          && '
-      $N=1
+          &&
+      'N=1
       while
         RC_TAG="$FULL_TAG.${{ release-candidate-suffix }}$N"
         git ref-parse "$RC_TAG" >/dev/null 2>&1
@@ -84,8 +84,7 @@ runs:
         ((N++))
       done
       FULL_TAG=$RC_TAG'
-          || ''
-          }}
+          || '' }}
 
       echo "tag=$FULL_TAG" >> "$GITHUB_OUTPUT"
       echo "message=$MESSAGE" >> "$GITHUB_OUTPUT"
@@ -98,8 +97,8 @@ runs:
         --force --message="$MESSAGE"
 
       ${{ !inputs.release-candidate
-          && '
-      TAG=$FULL_TAG;
+          &&
+      'TAG=$FULL_TAG;
       while
         TAG=$(sed -nE \
                 --expression=''s/([^\.]+(\.[^\.]+)*)\.[^\.]+/\1/p'' \
