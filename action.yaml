@@ -1,0 +1,113 @@
+name: Tag Version
+description: Create tag and update tags based on a version
+
+inputs:
+  tag:
+    description: Version to be updated
+    required: false
+    default: ''
+  message:
+    description: Annotated tag message
+    required: false
+    default: ''
+  latest-ref:
+    description: Name of the reference to the latest-release
+    required: false
+    default: latest
+  draft:
+    description: Whether to do a draft release
+    required: false
+  release-candidate:
+    description: Whether this is a release candidate
+    required: false
+  release-candidate-suffix:
+    description: Suffix to be used with release candidate tags
+    required: false
+    default: 'rc'
+  git-name:
+    description: Name for the author of the tags
+    required: false
+    default: 'GitHub Actions'
+  git-email:
+    description: Email for the author of the tags
+    required: false
+    default: 'github-actions@users.noreply.github.com'
+  dry-run:
+    description: Whether to not do any permanent changes
+    required: false
+
+outputs:
+  tag:
+    description: Tag created
+    value: ${{ steps.tag.outputs.tag }}
+  message:
+    description: Message on the tag
+    value: ${{ steps.tag.outputs.message }}
+
+runs:
+  using: 'composite'
+  steps:
+  - name: Tag
+    id: tag
+    shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MESSAGE: ${{ inputs.message }}
+    run: |
+      git config user.name ${{ inputs.git-name }}
+      git config user.email ${{ inputs.git-email }}
+
+      ${{ inputs.tag
+          && format('FULL_TAG="{0}"', inputs.tag)
+          ||
+      'FULL_TAG="$(git log -1 --pretty=format:"%s")"
+      MESSAGE="$(git log -1 --pretty=format:"%b")"' }}
+
+      ${{ inputs.release-candidate
+          && format(
+      'N=1
+      while
+        RC_TAG="$FULL_TAG.{0}$N"
+        git ref-parse "$RC_TAG" >/dev/null 2>&1
+      do
+        ((N++))
+      done
+      FULL_TAG=$RC_TAG', inputs.release-candidate-suffix)
+          || '' }}
+
+      echo "tag=$FULL_TAG" >> "$GITHUB_OUTPUT"
+      echo "message=$MESSAGE" >> "$GITHUB_OUTPUT"
+
+      git tag "$FULL_TAG" --message="$MESSAGE"
+      git tag "${{ inputs.latest-ref
+                  }}${{ inputs.release-candidate
+                        && format('-{0}', inputs.release-candidate-suffix)
+                        || '' }}" \
+        --force --message="$MESSAGE"
+
+      ${{ !inputs.release-candidate
+          &&
+      'TAG=$FULL_TAG;
+      while
+        TAG=$(sed -nE \
+                --expression=''s/([^\.]+(\.[^\.]+)*)\.[^\.]+/\1/p'' \
+              <<< "$TAG")
+        [ -n "$TAG" ]
+      do
+        echo $TAG
+        git tag "$TAG" --force
+      done'
+          || '' }}
+
+      git push origin --tags --force ${{ inputs.dry-run && '--dry-run' || '' }}
+  - name: Release
+    if: ${{ !inputs.dry-run }}
+    shell: bash
+    run: |
+      gh release create \
+        "${{ steps.tag.outputs.tag }}" \
+        --title "${{ steps.tag.outputs.tag }}" \
+        --verify-tag \
+        --notes-from-tag \
+        ${{ inputs.release-candidate && '--prerelease \' || '' }}
+        ${{ inputs.draft && '--draft \' || '' }}
