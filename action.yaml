@@ -5,45 +5,37 @@ inputs:
   tag:
     description: Version to be updated
     required: false
-    type: string
     default: ''
   message:
     description: Annotated tag message
     required: false
-    type: string
     default: ''
   latest-ref:
     description: Name of the reference to the latest-release
     required: false
-    type: string
     default: latest
   draft:
     description: Whether to do a draft release
     required: false
-    type: boolean
   release-candidate:
     description: Whether this is a release candidate
     required: false
-    type: boolean
   release-candidate-suffix:
     description: Suffix to be used with release candidate tags
     required: false
-    type: string
     default: 'rc'
   git-name:
     description: Name for the author of the tags
     required: false
-    type: string
     default: 'GitHub Actions'
   git-email:
     description: Email for the author of the tags
     required: false
-    type: string
     default: 'github-actions@users.noreply.github.com'
   dry-run:
     description: Whether to not do any permanent changes
     required: false
-    type: boolean
+
 outputs:
   tag:
     description: Tag created
@@ -55,7 +47,7 @@ outputs:
 runs:
   using: 'composite'
   steps:
-  - name: Update tags
+  - name: Tag
     id: tag
     shell: bash
     env:
@@ -70,10 +62,6 @@ runs:
           ||
       'FULL_TAG="$(git log -1 --pretty=format:"%s")"
       MESSAGE="$(git log -1 --pretty=format:"%b")"' }}
-
-      ${{ inputs.release-candidate
-          && format('echo "{0}"', inputs.release-candidate)
-          || ''}}
 
       ${{ inputs.release-candidate
           && format(
@@ -112,12 +100,13 @@ runs:
           || '' }}
 
       git push origin --tags --force ${{ inputs.dry-run && '--dry-run' || '' }}
-
-      ${{ inputs.dry-run && 'exit 0' || '' }}
-
+  - name: Release
+    if: ${{ !inputs.dry-run }}
+    shell: bash
+    run: |
       gh release create \
-        "$FULL_TAG" \
-        --title "$FULL_TAG" \
+        "${{ steps.tag.outputs.tag }}" \
+        --title "${{ steps.tag.outputs.tag }}" \
         --verify-tag \
         --notes-from-tag \
         ${{ inputs.release-candidate && '--prerelease \' || '' }}

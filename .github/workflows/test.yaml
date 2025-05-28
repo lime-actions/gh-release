@@ -100,7 +100,7 @@ jobs:
         release-candidate-suffix: 'RC'
         dry-run: true
     - name: Fail
-      if: steps.release-suffix.ouputs.tag != 'test1.test2.test3.RC1'
+      if: steps.release-suffix.outputs.tag != 'test1.test2.test3.RC1'
       run: |
         echo "${{ steps.release-suffix.ouputs.tag }}"
         exit 101
