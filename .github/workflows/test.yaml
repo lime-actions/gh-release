@@ -15,7 +15,8 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
-        sparse-checkout: ''
+        sparse-checkout: |
+          action.yaml
         sparse-checkout-cone-mode: false
     - name: Test commit
       run: |

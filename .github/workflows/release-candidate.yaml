@@ -18,7 +18,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
-        sparse-checkout: 'version.txt'
+        sparse-checkout: |
+          version.txt
+          action.yaml
         sparse-checkout-cone-mode: false
     - name: Get version
       id: version
