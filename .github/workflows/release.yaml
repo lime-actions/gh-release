@@ -1,5 +1,5 @@
 name: Release
-description: Creates tag and release based on the commit message
+run-name: Creating release
 on:
   pull_request:
     types:

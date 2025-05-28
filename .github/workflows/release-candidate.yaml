@@ -1,5 +1,6 @@
 name: Release Candidate
-description: Creating a release candidate
+run-name: Creating release candidate
+
 on:
   pull_request:
     types:
@@ -28,4 +29,4 @@ jobs:
       uses: ./
       with:
         tag: ${{ steps.version.outputs.version }}
-        release-candidate: True
+        release-candidate: true

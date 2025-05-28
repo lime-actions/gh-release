@@ -1,5 +1,5 @@
 name: Test
-description: Run tests for the action
+run-name: Testing the action
 on:
   push:
     paths:
@@ -39,15 +39,15 @@ jobs:
         comm -23 <(git tag | sort) <(git ls-remote --tags origin | cut -f2 \
         | sed 's#refs/tags/##' | sort) \
         | xargs -n 1 git tag -d
-    - name: Release from version
-      id: release-from-version
+    - name: Release from tag
+      id: release-from-tag
       uses: ./
       with:
         tag: 'test1.test2.test3'
         dry-run: true
     - name: Check
       run: |
-        if [ '${{ steps.release-from-version.outputs.tag }}' != 'test1.test2.test3' ]; then exit 101
+        if [ '${{ steps.release-from-tag.outputs.tag }}' != 'test1.test2.test3' ]; then exit 101
         elif ! git rev-parse 'test1.test2.test3' >/dev/null 2>&1; then exit 102
         elif ! git rev-parse 'test1.test2' >/dev/null 2>&1; then exit 103
         elif ! git rev-parse 'test1' >/dev/null 2>&1; then exit 104
@@ -58,7 +58,7 @@ jobs:
         comm -23 <(git tag | sort) <(git ls-remote --tags origin | cut -f2 \
         | sed 's#refs/tags/##' | sort) \
         | xargs -n 1 git tag -d
-    - name: Release
+    - name: Release with different latest
       uses: ./
       with:
         tag: 'test1.test2.test3'
@@ -73,7 +73,7 @@ jobs:
         comm -23 <(git tag | sort) <(git ls-remote --tags origin | cut -f2 \
         | sed 's#refs/tags/##' | sort) \
         | xargs -n 1 git tag -d
-    - name: Release
+    - name: Release candidate
       uses: ./
       with:
         tag: 'test1.test2.test3'
@@ -91,7 +91,7 @@ jobs:
         comm -23 <(git tag | sort) <(git ls-remote --tags origin | cut -f2 \
         | sed 's#refs/tags/##' | sort) \
         | xargs -n 1 git tag -d
-    - name: Release
+    - name: Release candidate suffix
       id: release-suffix
       uses: ./
       with:
@@ -102,5 +102,5 @@ jobs:
     - name: Fail
       if: steps.release-suffix.outputs.tag != 'test1.test2.test3.RC1'
       run: |
-        echo "${{ steps.release-suffix.ouputs.tag }}"
+        echo "${{ steps.release-suffix.outputs.tag }}"
         exit 101

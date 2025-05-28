@@ -1,5 +1,5 @@
 name: PR from Version
-description: Create PR from version in the repository
+run-name: PR ${{ inputs.head }} -> ${{ inputs.base }}
 
 on:
   workflow_call:
@@ -19,13 +19,13 @@ on:
         description: Source branch name
         required: false
         type: string
-        default: ''
+        default: ${{ github.ref_name }}
 
       base:
         description: Target branch name
         required: false
         type: string
-        default: ''
+        default: ${{ github.event.repository.default_branch }}
 
       prefix:
         description: PR prefix
@@ -46,8 +46,8 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       shell: bash
       run: |
-        BASE_NAME="${{ inputs.base || github.event.repository.default_branch }}"
-        HEAD_NAME="${{ inputs.head || github.ref_name }}"
+        BASE_NAME="${{ inputs.base }}"
+        HEAD_NAME="${{ inputs.head }}"
 
         if [ $(gh pr list \
                 --repo "$GITHUB_REPOSITORY" \

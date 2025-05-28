@@ -1,5 +1,5 @@
 name: Update PR title
-description: Update PR title with the version of the contents
+run-name: "Updating title on PR: ${{ github.event.pull_request.head }} -> ${{ github.event.pull_request.base }}"
 
 on:
   pull_request:
