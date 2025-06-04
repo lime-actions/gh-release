@@ -2,9 +2,9 @@ name: Merge
 run-name: Merging ${{ github.event.pull_request.head.ref }} -> ${{ github.event.pull_request.base.ref }}
 
 on:
-  pull_request_review:
-    types:
-    - submitted
+  workflow_call:
+    inputs:
+
 
 jobs:
   merge:
@@ -35,13 +35,24 @@ jobs:
               != 'release-candidate'
               && '--delete-branch \' || '' }}
     - name: Checkout
-      if: github.event.pull_request.base.ref
-          == github.event.repository.default_branch
       uses: actions/checkout@v4
       with:
         sparse-checkout: |
           action.yaml
+          ${{ github.event.pull_request.base.ref
+              != github.event.repository.default_branch
+              &&
+              'version.txt
+               .github/actions/pr-create/action.yaml'
+              || '' }}
         sparse-checkout-cone-mode: false
+    - name: Create PR
+      if: github.event.pull_request.base.ref
+          != github.event.repository.default_branch
+      uses: ./.github/actions/pr-create
+      with:
+        version-from: 'version-file'
+        head: ${{ github.event.pull_request.base.ref }}
     - name: Count matching paths
       if: github.event.pull_request.base.ref
           == github.event.repository.default_branch
@@ -54,20 +65,18 @@ jobs:
             ${{ github.event.pull_request.base.sha }} \
             ${{ github.event.pull_request.head.sha }} \
           | grep -c $PATTERN ).s" \
-        | tr ' ' 'x'
+        | tr ' ' 'x' \
         >> "$GITHUB_OUTPUT"
     - name: Release
       if: github.event.pull_request.base.ref
           == github.event.repository.default_branch
       uses: ./
-  create-pr:
+      with:
+        version-from: 'commit-message'
+  release:
     needs:
-    - merge
-    if: github.event.pull_request.base.ref
-        != github.event.repository.default_branch
-    permissions:
-       pull-requests: write
-       contents: read
-    uses: ./.github/workflows/pr-create.yaml
+      - merge
+    if: ${{ github.event.review.state == 'approved' }}
+    uses: ${{ inputs.release-hook }}
     with:
-      head: ${{ github.event.pull_request.base.ref }}
+      release-hook: ./.github/workflows/release.yaml

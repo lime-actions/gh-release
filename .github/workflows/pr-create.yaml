@@ -2,6 +2,7 @@ name: Create PR
 run-name: Creating PR from ${{ github.ref_name }}
 
 on:
+  push:
   workflow_call:
     inputs:
       head:
@@ -21,11 +22,12 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
-        sparse-checkout:
+        sparse-checkout: |
           .github/actions/pr-create/action.yaml
+          version.txt
         sparse-checkout-cone-mode: false
-    - name: Create PR
+    - name: Create PR from ${{ inputs.head }}
       uses: ./.github/actions/pr-create
       with:
         version-from: 'version-file'
-        version-source: 'version.txt'
+        head: ${{ inputs.head }}

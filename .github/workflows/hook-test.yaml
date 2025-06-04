@@ -1,0 +1,14 @@
+name: Hook test
+
+on:
+  push:
+    paths:
+      - '.github/workflows/hook.yaml'
+      - '.github/workflows/hook-call.yaml'
+      - '.github/workflows/hook-test.yaml'
+
+jobs:
+  test:
+    uses: ./.github/workflows/hook-call.yaml
+    with:
+      hook: ./.github/workflows/hook.yaml
