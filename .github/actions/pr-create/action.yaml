@@ -36,7 +36,7 @@ inputs:
     default: ${{ github.events.repository.default_branch }}
 
 runs:
-  uses: 'composite'
+  using: 'composite'
   steps:
   - name: Get base
     id: base
