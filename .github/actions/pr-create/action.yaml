@@ -107,9 +107,8 @@ runs:
                       || steps.base.outputs.base == 'dev'
                       && steps.base.outputs.base }}" \
       >> "$GITHUB_OUTPUT"
-
   - name: Create PR
-    if: ${{ !steps.number.outputs.number }}
+    if: ${{ !steps.info.outputs.number }}
     env:
       GH_TOKEN: ${{ github.token }}
     shell: bash
@@ -121,7 +120,7 @@ runs:
         --body "$(git log -1 --pretty=format:'%b')" \
         --draft
   - name: Update PR title
-    if: ${{ steps.number.outputs.number
+    if: ${{ steps.info.outputs.number
             && steps.title.outputs.title != steps.info.outputs.title
             && steps.base.outputs.base == steps.info.outputs.baseRefName }}
     shell: bash
