@@ -111,3 +111,7 @@ runs:
         --notes-from-tag \
         ${{ inputs.release-candidate && '--prerelease \' || '' }}
         ${{ inputs.draft && '--draft \' || '' }}
+
+branding:
+  icon: 'package'
+  color: 'green'

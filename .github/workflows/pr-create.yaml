@@ -2,25 +2,30 @@ name: Create PR
 run-name: Creating PR from ${{ github.ref_name }}
 
 on:
-  push:
+  workflow_call:
+    inputs:
+      head:
+        description: 'Head reference from which the PR is created'
+        required: False
+        default: ${{ github.ref_name }}
 
 jobs:
   create-pr:
-    if: github.ref_name != github.event.repository.default_branch
-    uses: ./.github/workflows/create_pr_from_version.yaml
+    if: inputs.head != github.event.repository.default_branch
+    runs-on: ubuntu-latest
     permissions:
        pull-requests: write
        contents: read
-    with:
-      version-from: 'version-file'
-      version-path: 'version.txt'
-      base: ${{ github.ref_name == 'dev'
-                && 'release-candidate'
-                || github.ref_name == 'release-candidate'
-                && github.event.repository.default_branch
-                || 'dev' }}
-      prefix: ${{ github.ref_name == 'dev'
-                  && 'RC v'
-                  || github.ref_name == 'release-candidate'
-                  && 'v'
-                  || format('{0} v', github.ref_name) }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          version.txt
+          .github/actions/pr-create/actions.yaml
+        sparse-checkout-cone-mode: false
+    - name: Create PR
+      uses: ./.github/actions/pr-create
+      with:
+        version-from: 'version-file'
+        version-source: 'version.txt'
