@@ -57,6 +57,8 @@ runs:
   - name: Get PR info
     id: info
     shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
     run: |
       gh pr list \
         --repo "$GITHUB_REPOSITORY" \
