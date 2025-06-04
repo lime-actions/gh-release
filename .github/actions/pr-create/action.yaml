@@ -122,6 +122,7 @@ runs:
     if: ${{ steps.number.outputs.number
             && steps.title.outputs.title != steps.info.outputs.title
             && steps.base.outputs.base == steps.info.outputs.baseRefName }}
+    shell: bash
     env:
       GH_TOKEN: ${{ github.token }}
     run: |
