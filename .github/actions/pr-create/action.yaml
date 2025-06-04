@@ -1,7 +1,7 @@
 name: PR from Version
 
 inputs:
-  version_from:
+  version-from:
     description: Method of getting the version if not specified
     required: false
     type: choice
@@ -11,7 +11,7 @@ inputs:
       - 'version-file'
     default: 'version-file'
 
-  version_source:
+  version-source:
     description: Source containing the version, e.g. path to a file
     required: false
     type: string
@@ -29,7 +29,7 @@ inputs:
     type: string
     default: 'release-candidate'
 
-  default_branch:
+  default-branch:
     description: Default branch name
     required: false
     type: string
@@ -42,8 +42,8 @@ runs:
     id: base
     shell: bash
     run: |
-      ${{ inputs.head == inputs.release_candidate
-          && format('echo "base={0}"', inputs.default_branch)
+      ${{ inputs.head == inputs.release-candidate
+          && format('echo "base={0}"', inputs.default-branch)
           || format(
             'if [ -z $(gh api repos/{0}/branches --jq ".[].name" \
                       | sed -n --expression=''s\^{1}$\x\p'') ]
@@ -52,7 +52,7 @@ runs:
             else
               echo "base={2}" >> "$GITHUB_OUTPUT"
             fi',
-            github.repository, inputs.release_candidate, inputs.default_branch)
+            github.repository, inputs.release-candidate, inputs.default-branch)
           }}
   - name: Get PR info
     id: info
@@ -65,41 +65,41 @@ runs:
         --template '{{range $key, $value := (index . 0)}}{{printf "%v=%v\n" $key $value}}{{end}}' \\
       >> "$GITHUB_OUTPUT"
   - name: Checkout
-    if: steps.base.outputs.base == inputs.default_branch
+    if: steps.base.outputs.base == inputs.default-branch
         && !steps.info.outputs.baseRefName
-        || steps.base.outputs.base == inputs.default_branch
+        || steps.base.outputs.base == inputs.default-branch
         && steps.base.outputs.base == steps.info.outputs.baseRefName
-        || steps.base.outputs.base == inputs.release_candidate
+        || steps.base.outputs.base == inputs.release-candidate
         && !steps.info.outputs.baseRefName
-        || steps.base.outputs.base == inputs.release_candidate
+        || steps.base.outputs.base == inputs.release-candidate
         && steps.base.outputs.base == steps.info.outputs.baseRefName
     uses: actions/checkout@v4
     with:
       sparse-checkout: |
-        ${{ inputs.version_source }}
+        ${{ inputs.version-source }}
       sparse-checkout-cone-mode: false
   - name: Get version
     id: get-version
-    if: steps.base.outputs.base == inputs.default_branch
+    if: steps.base.outputs.base == inputs.default-branch
         && !steps.info.outputs.baseRefName
-        || steps.base.outputs.base == inputs.default_branch
+        || steps.base.outputs.base == inputs.default-branch
         && steps.base.outputs.base == steps.info.outputs.baseRefName
-        || steps.base.outputs.base == inputs.release_candidate
+        || steps.base.outputs.base == inputs.release-candidate
         && !steps.info.outputs.baseRefName
-        || steps.base.outputs.base == inputs.release_candidate
+        || steps.base.outputs.base == inputs.release-candidate
         && steps.base.outputs.base == steps.info.outputs.baseRefName
     uses: lime-actions/version@latest
     with:
-      from: ${{ inputs.version_from }}
-      source: ${{ inputs.version_source }}
+      from: ${{ inputs.version-from }}
+      source: ${{ inputs.version-source }}
   - name: Format title
     id: title
     shell: bash
     run: |
-      echo "title=${{ steps.base.outputs.base == inputs.default_branch
+      echo "title=${{ steps.base.outputs.base == inputs.default-branch
                       && format('v{0}', inputs.version
                                         || steps.get-version.outputs.version)
-                      || steps.base.outputs.base == 'release-candidate'
+                      || steps.base.outputs.base == inputs.release-candidate
                       && format('RC v{0}', inputs.version
                                            || steps.get-version.outputs.version)
                       || steps.base.outputs.base == 'dev'

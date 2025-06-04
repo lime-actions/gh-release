@@ -27,5 +27,5 @@ jobs:
     - name: Create PR
       uses: ./.github/actions/pr-create
       with:
-        version_from: 'version-file'
-        version_source: 'version.txt'
+        version-from: 'version-file'
+        version-source: 'version.txt'
