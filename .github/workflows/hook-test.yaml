@@ -9,6 +9,6 @@ on:
 
 jobs:
   test:
-    uses: ./.github/workflows/hook-call.yaml
+    uses: './.github/workflows/hook-call.yaml'
     with:
-      hook: ./.github/workflows/hook.yaml
+      hook: './.github/workflows/hook.yaml'
