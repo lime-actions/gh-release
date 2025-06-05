@@ -5,6 +5,8 @@ on:
   pull_request_review:
     types:
     - submitted
+    paths:
+    - version.txt
 
 jobs:
   merge:
@@ -32,3 +34,4 @@ jobs:
         base: ${{ github.event.pull_request.base.ref }}
         subject: ${{ github.event.pull_request.title }}
         body: ${{ github.event.pull_request.body }}
+        pattern: '(action.yaml)|(README.md)'
