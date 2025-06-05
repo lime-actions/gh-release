@@ -3,13 +3,6 @@ run-name: Creating PR from ${{ github.ref_name }}
 
 on:
   push:
-  workflow_call:
-    inputs:
-      head:
-        description: 'Head reference from which the PR is created'
-        required: False
-        type: string
-        default: ${{ github.ref_name }}
 
 jobs:
   create-pr:
@@ -27,8 +20,8 @@ jobs:
           .github/actions/pr-create/action.yaml
           version.txt
         sparse-checkout-cone-mode: false
-    - name: Create PR from ${{ inputs.head }}
+    - name: Create PR from ${{ github.ref_name }}
       uses: ./.github/actions/pr-create
       with:
         version-from: 'version-file'
-        head: ${{ inputs.head }}
+        head: ${{ github.ref_name }}

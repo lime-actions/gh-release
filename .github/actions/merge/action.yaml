@@ -1,0 +1,77 @@
+name: Merge
+run-name: Merging ${{ github.event.pull_request.head.ref }} -> ${{ inputs.base  }}
+
+inputs:
+  base:
+    description: Target branch name
+    required: true
+    type: string
+  subject:
+    description: Merge commit subject
+    required: true
+    type: string
+    default: ''
+  body:
+    description: Merge commit body
+    required: false
+    type: string
+    default: ''
+  default-branch:
+    description: Default branch name
+    required: false
+    type: string
+    default: ${{ github.events.repository.default_branch }}
+  release-candidate:
+    description: Release candidate branch name
+    required: false
+    type: string
+    default: 'release-candidate'
+  token:
+    description: Access token
+    required: false
+    type: string
+    default: ${{ github.token }}
+
+runs:
+  using: 'composite'
+  steps:
+  - name: Merge
+    env:
+      GH_TOKEN: ${{ inputs.token }}
+      BODY: ${{ inputs.body }}
+    shell: bash
+    run: |
+      gh pr merge \
+        ${{ github.event.pull_request.number }} \
+        --repo "$GITHUB_REPOSITORY" \
+        --subject "${{ github.event.pull_request.title }}" \
+        --body "$BODY" \
+        --auto \
+        ${{ inputs.base == inputs.default-branch
+            && '--squash' || '--merge'}} \
+        ${{ inputs.base != inputs.default-branch
+            && inputs.base != inputs.release-candidate
+            && '--delete-branch \' || '' }}
+  - name: Create PR
+    if: inputs.base
+        != inputs.default-branch
+    uses: ./.github/actions/pr-create
+    with:
+      version-from: 'version-file'
+      head: ${{ inputs.base  }}
+  - name: Count matching paths
+    if: inputs.base
+        == inputs.default-branch
+    id: paths
+    env:
+      PATTERN: '(action.yaml)|(version.txt)|(README.md)'
+    run: |
+      printf "matches=%$( \
+        git diff --name-only \
+          ${{ github.event.pull_request.base.sha }} \
+          ${{ github.event.pull_request.head.sha }} \
+        | grep -c $PATTERN ).s" \
+      | tr ' ' 'x' \
+      >> "$GITHUB_OUTPUT"
+  - name: GH release
+    uses: ./
