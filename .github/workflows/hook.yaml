@@ -4,7 +4,8 @@ on:
   workflow_call:
 
 jobs:
-  runs-on: ubuntu-latest
-  steps:
-  - name: Test
-    run: ''
+  job:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Test
+      run: ''
