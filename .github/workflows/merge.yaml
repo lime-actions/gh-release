@@ -74,4 +74,4 @@ jobs:
         && github.event.review.state == 'approved'
     uses: ${{ inputs.release-hook }}
     with:
-      release-hook: ./.github/workflows/release.yaml
+      release-hook: lime-actions/gh-release/.github/workflows/release.yaml@${{ github.sha }}

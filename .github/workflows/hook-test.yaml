@@ -9,6 +9,6 @@ on:
 
 jobs:
   test:
-    uses: ./.github/workflows/hook-call.yaml
+    uses: lime-actions/gh-release/.github/workflows/hook-call.yaml@${{ github.sha }}
     with:
-      hook: './.github/workflows/hook.yaml'
+      hook: lime-actions/gh-release/.github/workflows/hook.yaml@${{ github.sha }}
