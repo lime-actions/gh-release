@@ -16,9 +16,10 @@ on:
 
 jobs:
   release:
-    if: github.event.action == 'closed'
-        && github.event.pull_request.merged
+    if: github.event_name == 'workflow_call'
         || github.event.action == 'ready_for_review'
+        || github.event.action == 'closed'
+        && github.event.pull_request.merged
         || github.event.action == 'synchronize'
         && !github.event.pull_request.draft
     permissions:
@@ -30,7 +31,7 @@ jobs:
       with:
         sparse-checkout: |
           'action.yaml'
-          ${{ github.event.action != 'closed' || 'version.txt' || '' }}
+          ${{ github.event.action != 'closed' && 'version.txt' || '' }}
         sparse-checkout-cone-mode: false
     - name: GH Release
       uses: ./
