@@ -125,13 +125,20 @@ runs:
       GH_TOKEN: ${{ github.token }}
     shell: bash
     run: |
+      gh --version
       BODY="$(git log -1 --pretty=format:'%B')"
+
+      if [ -z $BODY ]; then
+        echo '-' > .body.txt
+      else
+        echo "$BODY" > .body.txt
+
       gh pr create \
         --repo "${{ inputs.repo }}"
         --head "${{ inputs.head }}" \
         --base "${{ steps.base.outputs.base }}" \
         --title "${{ steps.title.outputs.title }}" \
-        --body "${BODY:-Auto-generated PR}" \
+        --body-file .body.txt \
         --draft
   - name: Update PR title
     if: ${{ steps.info.outputs.number
