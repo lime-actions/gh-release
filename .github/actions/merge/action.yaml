@@ -36,7 +36,7 @@ inputs:
   repo:
     description: GitHub repository
     type: string
-    defauls: ${{ github.repository }}
+    default: ${{ github.repository }}
   default-branch:
     description: Default branch name
     required: false
