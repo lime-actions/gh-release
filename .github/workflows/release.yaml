@@ -1,7 +1,6 @@
 name: Release
-run-name: Creating release
+run-name: Creating release from ${{ github.ref_name }}
 on:
-  workflow_call:
   pull_request:
     types:
     - closed
@@ -16,8 +15,7 @@ on:
 
 jobs:
   release:
-    if: github.event_name == 'workflow_call'
-        || github.event.action == 'ready_for_review'
+    if: github.event.action == 'ready_for_review'
         || github.event.action == 'closed'
         && github.event.pull_request.merged
         || github.event.action == 'synchronize'

@@ -1,3 +1,3 @@
-# Generic Template
+# GitHub Release
 
-Generic template for creating a repository
+GitHub action to create versioned tags and create GitHub release
