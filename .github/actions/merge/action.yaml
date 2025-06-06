@@ -114,14 +114,3 @@ runs:
   - name: GH release
     if: ${{ !inputs.pattern || steps.paths.outputs.matches }}
     uses: ./
-  - name: Refresh
-    if: inputs.base == inputs.default-branch
-    shell: bash
-    env:
-      GH_TOKEN: ${{ inputs.token }}
-    run: |
-      gh pr create \
-        --repo "${{ inputs.repo }}"
-        --head "refs/heads/${{ inputs.head }}" \
-        --base "refs/heads/dev" \
-        --title "Sync back to dev" \
