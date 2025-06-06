@@ -133,7 +133,7 @@ runs:
       if [ -z "$BODY" ]; then
         echo 'default body' > .body.txt
       else
-        echo "$BODY" | sed 's/ *$//' > .body.txt
+        printf "%s\n" "$BODY" > .body.txt
       fi
 
       echo "::group::Body Debug"
