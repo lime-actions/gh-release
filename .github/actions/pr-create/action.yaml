@@ -43,7 +43,8 @@ runs:
     shell: bash
     run: |
       ${{ inputs.head == inputs.release-candidate
-          && format('echo "base={0}"', inputs.default-branch)
+          && format('echo "base={0}" >> "$GITHUB_OUTPUT"',
+                     inputs.default-branch)
           || format(
             'if [ -z $(gh api repos/{0}/branches --jq ".[].name" \
                       | sed -n --expression=''s\^{1}$\x\p'') ]
