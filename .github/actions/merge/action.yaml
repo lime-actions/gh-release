@@ -55,7 +55,7 @@ inputs:
     description: Default branch name
     required: false
     type: string
-    default: ${{ github.events.repository.default_branch }}
+    default: ${{ github.event.repository.default_branch }}
   release-candidate:
     description: Release candidate branch name
     required: false
@@ -95,7 +95,7 @@ runs:
       head: ${{ inputs.base  }}
       version-from: ${{ inputs.version-from }}
       version-source: ${{ inputs.version-source }}
-      release-candidate: ${{ inputs.release-candidate}}
+      release-candidate-branch: ${{ inputs.release-candidate}}
       default-branch: ${{ inputs.default-branch }}
   - name: Count matching paths
     if: inputs.base == inputs.default-branch
