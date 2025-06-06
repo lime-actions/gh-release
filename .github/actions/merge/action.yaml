@@ -112,5 +112,5 @@ runs:
       echo "$MATCHES"
       echo "matches=${MATCHES/0/}" >> "$GITHUB_OUTPUT"
   - name: GH release
-    if: ${{ !inputs.pattern || steps.paths.outputs.matches}}
+    if: ${{ !inputs.pattern || steps.paths.outputs.matches }}
     uses: ./
