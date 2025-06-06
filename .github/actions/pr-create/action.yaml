@@ -128,11 +128,13 @@ runs:
       gh --version
       BODY="$(git log -1 --pretty=format:'%B')"
 
-      if [ -z $BODY ]; then
+      if [ -z "$BODY" ]; then
         echo '-' > .body.txt
       else
         echo "$BODY" > .body.txt
       fi
+
+      cat -A .body.txt
 
       gh pr create \
         --repo "${{ inputs.repo }}"
