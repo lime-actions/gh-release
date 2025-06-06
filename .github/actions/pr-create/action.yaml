@@ -146,5 +146,5 @@ runs:
       GH_TOKEN: ${{ github.token }}
     run: |
       gh pr edit ${{ steps.info.outputs.number }} \
-        --repo "${{ inputs.repo }}"
+        --repo "${{ inputs.repo }}" \
         --title "${{ steps.title.outputs.title }}"
