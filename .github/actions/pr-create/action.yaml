@@ -126,10 +126,13 @@ runs:
     shell: bash
     run: |
       git log -1 --pretty=format:'%B' > .body.txt
+
+      cat -A .body.txt
+
       gh pr create \
         --repo "${{ inputs.repo }}"
-        --head "refs/heads/${{ inputs.head }}" \
-        --base "refs/heads/${{ steps.base.outputs.base }}" \
+        --head "${{ inputs.head }}" \
+        --base "${{ steps.base.outputs.base }}" \
         --title "${{ steps.title.outputs.title }}" \
         --body-file .body.txt \
         --draft
