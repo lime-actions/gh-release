@@ -24,4 +24,3 @@ jobs:
       uses: ./.github/actions/pr-create
       with:
         version-from: 'version-file'
-        head: ${{ github.ref_name }}
