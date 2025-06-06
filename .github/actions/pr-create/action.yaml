@@ -36,6 +36,11 @@ inputs:
     required: false
     type: string
     default: ${{ github.token }}
+  repo:
+    description: Repository
+    required: false
+    type: string
+    default: ${{ github.repository }}
 runs:
   using: 'composite'
   steps:
@@ -57,7 +62,7 @@ runs:
                       echo "RC"
                       echo "base={1}" >> "$GITHUB_OUTPUT"
                     fi',
-                    github.repository,
+                    inputs.repo,
                     inputs.release-candidate-branch,
                     inputs.default-branch)
           }}
@@ -68,7 +73,7 @@ runs:
       GH_TOKEN: ${{ github.token }}
     run: |
       gh pr list \
-        --repo "$GITHUB_REPOSITORY" \
+        --repo "${{ inputs.repo }}" \
         --head "${{ inputs.head }}" \
         --json number,title,baseRefName \
         --template '{{ if . }}{{ range $key, $value := (index . 0) }}{{ printf "%v=%v\n" $key $value }}{{ end }}{{ end }}' \
@@ -121,6 +126,7 @@ runs:
     shell: bash
     run: |
       gh pr create \
+        --repo "${{ inputs.repo }}"
         --head "refs/heads/${{ inputs.head }}" \
         --base "refs/heads/${{ steps.base.outputs.base }}" \
         --title "${{ steps.title.outputs.title }}" \
@@ -134,5 +140,6 @@ runs:
     env:
       GH_TOKEN: ${{ github.token }}
     run: |
-      gh pr edit ${{ steps.number.outputs.number }} \
-        --title  "${{ steps.title.outputs.title }}"
+      gh pr edit ${{ steps.info.outputs.number }} \
+        --repo "${{ inputs.repo }}"
+        --title "${{ steps.title.outputs.title }}"
