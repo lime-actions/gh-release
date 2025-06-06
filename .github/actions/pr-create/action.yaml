@@ -68,7 +68,11 @@ runs:
         --repo "$GITHUB_REPOSITORY" \
         --head "${{ inputs.head }}" \
         --json number,title,baseRefName \
-        --template '{{range $key, $value := (index . 0)}}{{printf "%v=%v\n" $key $value}}{{end}}' \
+        --template '{{ if . }}
+                      {{ range $key, $value := (index . 0) }}
+                        {{ printf "%v=%v\n" $key $value }}
+                      {{ end }}
+                    {{ end }}' \
       >> "$GITHUB_OUTPUT"
   - name: Checkout
     if: steps.base.outputs.base == inputs.default-branch
