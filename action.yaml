@@ -1,0 +1,132 @@
+name: Tag Version
+description: Create tag and update tags based on a version
+
+inputs:
+  draft:
+    description: Whether to do a draft release
+    required: false
+  dry-run:
+    description: Whether to not do any permanent changes
+    required: false
+  git-name:
+    description: Name for the author of the tags
+    required: false
+    default: 'GitHub Actions'
+  git-email:
+    description: Email for the author of the tags
+    required: false
+    default: 'github-actions@users.noreply.github.com'
+  latest-ref:
+    description: Name of the reference to the latest-release
+    required: false
+    default: latest
+  message:
+    description: Annotated tag message
+    required: false
+    default: ''
+  release-candidate:
+    description: Whether this is a release candidate
+    required: false
+  release-candidate-suffix:
+    description: Suffix to be used with release candidate tags
+    required: false
+    default: 'rc'
+  version-from:
+    description: Method of getting the version if not specified
+    required: false
+    type: choice
+    options:
+      - 'commit-message'
+      - 'pyproject.toml'
+      - 'version-file'
+    default: 'commit-message'
+  version-source:
+    description: Source containing the version, e.g. path to a file
+    required: false
+    type: string
+    default: ''
+
+outputs:
+  tag:
+    description: Tag created
+    value: ${{ steps.tag.outputs.tag }}
+  message:
+    description: Message on the tag
+    value: ${{ steps.tag.outputs.message }}
+
+runs:
+  using: 'composite'
+  steps:
+  - name: Get version
+    id: version
+    uses: lime-actions/version@latest
+    with:
+      from: ${{ inputs.version-from }}
+      source: ${{ inputs.version-source }}
+  - name: Tag
+    id: tag
+    shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MESSAGE: ${{ inputs.message }}
+    run: |
+      git config user.name ${{ inputs.git-name }}
+      git config user.email ${{ inputs.git-email }}
+
+      FULL_TAG="v${{ steps.version.outputs.version }}"
+      ${{ inputs.version-from == 'commit-message'
+          && !inputs.message
+          && 'MESSAGE="$(git log -1 --pretty=format:"%b")"' }}
+
+      ${{ inputs.release-candidate
+          && format(
+      'N=1
+      while
+        RC_TAG="$FULL_TAG.{0}$N"
+        git ref-parse "$RC_TAG" >/dev/null 2>&1
+      do
+        ((N++))
+      done
+      FULL_TAG=$RC_TAG', inputs.release-candidate-suffix)
+          || '' }}
+
+      echo "tag=$FULL_TAG" >> "$GITHUB_OUTPUT"
+      echo "message=$MESSAGE" >> "$GITHUB_OUTPUT"
+
+      git tag "$FULL_TAG" --message="$MESSAGE"
+      git tag "${{ inputs.latest-ref
+                  }}${{ inputs.release-candidate
+                        && format('-{0}', inputs.release-candidate-suffix)
+                        || '' }}" \
+        --force --message="$MESSAGE"
+
+      ${{ !inputs.release-candidate
+          &&
+      'TAG=$FULL_TAG;
+      while
+        TAG=$(sed -nE \
+                --expression=''s/([^\.]+(\.[^\.]+)*)\.[^\.]+/\1/p'' \
+              <<< "$TAG")
+        [ -n "$TAG" ]
+      do
+        echo $TAG
+        git tag "$TAG" --force
+      done'
+          || '' }}
+
+      git push origin --tags --force ${{ inputs.dry-run && '--dry-run' || '' }}
+  - name: Release
+    if: ${{ !inputs.dry-run }}
+    shell: bash
+    run: |
+      gh release create \
+        "${{ steps.tag.outputs.tag }}" \
+        --title "${{ steps.tag.outputs.tag }}" \
+        --verify-tag \
+        --notes-from-tag \
+        ${{ inputs.release-candidate && '--prerelease \' || '' }}
+        ${{ inputs.draft && '--draft \' || '' }}
+
+branding:
+  icon: 'package'
+  color: 'green'
