@@ -36,3 +36,13 @@ jobs:
         subject: ${{ github.event.pull_request.title }}
         body: ${{ github.event.pull_request.body }}
         pattern: '(action.yaml)|(README.md)'
+    - name: Merge back
+      if: github.event.pull_request.base.ref
+          == github.event.repository.default_branch
+      run: |
+        git checkout release-candidate
+        git merge ${{ github.event.pull_request.base.ref }} -X ours
+        git push
+        git checkout dev
+        git merge ${{ github.event.pull_request.base.ref }} -X ours
+        git push
