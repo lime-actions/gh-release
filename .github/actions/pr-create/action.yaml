@@ -48,15 +48,18 @@ runs:
       ${{ inputs.head == inputs.release-candidate-branch
           && format('echo "base={0}" >> "$GITHUB_OUTPUT"',
                      inputs.default-branch)
-          || format(
-            'if [ -z $(gh api repos/{0}/branches --jq ".[].name" \
-                      | sed -n --expression=''s\^{1}$\x\p'') ]
-            then
-              echo "base={1}" >> "$GITHUB_OUTPUT"
-            else
-              echo "base={2}" >> "$GITHUB_OUTPUT"
-            fi',
-            github.repository, inputs.release-candidate-branch, inputs.default-branch)
+          || format('if [ -z $(gh api repos/{0}/branches --jq ".[].name" \
+                               | sed -n --expression=''s\^{1}$\x\p'') ]
+                    then
+                      echo "no rc"
+                      echo "base={2}" >> "$GITHUB_OUTPUT"
+                    else
+                      echo "RC"
+                      echo "base={1}" >> "$GITHUB_OUTPUT"
+                    fi',
+                    github.repository,
+                    inputs.release-candidate-branch,
+                    inputs.default-branch)
           }}
   - name: Get PR info
     id: info
