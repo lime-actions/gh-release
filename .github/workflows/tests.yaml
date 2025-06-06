@@ -4,7 +4,7 @@ on:
   push:
     paths:
     - 'action.yaml'
-    - '.github/workflows/test.yaml'
+    - '.github/workflows/tests.yaml'
 
 jobs:
   release:
@@ -15,7 +15,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
-        sparse-checkout: ''
+        sparse-checkout: |
+          action.yaml
+          test
         sparse-checkout-cone-mode: false
     - name: Test commit
       run: |

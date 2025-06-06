@@ -1,0 +1,131 @@
+name: PR from Version
+
+inputs:
+  version-from:
+    description: Method of getting the version if not specified
+    required: false
+    type: choice
+    options:
+      - 'commit-message'
+      - 'pyproject.toml'
+      - 'version-file'
+    default: 'version-file'
+
+  version-source:
+    description: Source containing the version, e.g. path to a file
+    required: false
+    type: string
+    default: ''
+
+  head:
+    description: Source branch name
+    required: false
+    type: string
+    default: ${{ github.ref_name }}
+
+  release-candidate:
+    description: Release candidate branch name
+    required: false
+    type: string
+    default: 'release-candidate'
+
+  default-branch:
+    description: Default branch name
+    required: false
+    type: string
+    default: ${{ github.events.repository.default_branch }}
+
+runs:
+  using: 'composite'
+  steps:
+  - name: Get base
+    id: base
+    shell: bash
+    run: |
+      ${{ inputs.head == inputs.release-candidate
+          && format('echo "base={0}"', inputs.default-branch)
+          || format(
+            'if [ -z $(gh api repos/{0}/branches --jq ".[].name" \
+                      | sed -n --expression=''s\^{1}$\x\p'') ]
+            then
+              echo "base={1}" >> "$GITHUB_OUTPUT"
+            else
+              echo "base={2}" >> "$GITHUB_OUTPUT"
+            fi',
+            github.repository, inputs.release-candidate, inputs.default-branch)
+          }}
+  - name: Get PR info
+    id: info
+    shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+    run: |
+      gh pr list \
+        --repo "$GITHUB_REPOSITORY" \
+        --head "${{ inputs.head }}" \
+        --json number,title,baseRefName \
+        --template '{{range $key, $value := (index . 0)}}{{printf "%v=%v\n" $key $value}}{{end}}' \
+      >> "$GITHUB_OUTPUT"
+  - name: Checkout
+    if: steps.base.outputs.base == inputs.default-branch
+        && !steps.info.outputs.baseRefName
+        || steps.base.outputs.base == inputs.default-branch
+        && steps.base.outputs.base == steps.info.outputs.baseRefName
+        || steps.base.outputs.base == inputs.release-candidate
+        && !steps.info.outputs.baseRefName
+        || steps.base.outputs.base == inputs.release-candidate
+        && steps.base.outputs.base == steps.info.outputs.baseRefName
+    uses: actions/checkout@v4
+    with:
+      sparse-checkout: |
+        ${{ inputs.version-source }}
+      sparse-checkout-cone-mode: false
+  - name: Get version
+    id: get-version
+    if: steps.base.outputs.base == inputs.default-branch
+        && !steps.info.outputs.baseRefName
+        || steps.base.outputs.base == inputs.default-branch
+        && steps.base.outputs.base == steps.info.outputs.baseRefName
+        || steps.base.outputs.base == inputs.release-candidate
+        && !steps.info.outputs.baseRefName
+        || steps.base.outputs.base == inputs.release-candidate
+        && steps.base.outputs.base == steps.info.outputs.baseRefName
+    uses: lime-actions/version@latest
+    with:
+      from: ${{ inputs.version-from }}
+      source: ${{ inputs.version-source }}
+  - name: Format title
+    id: title
+    shell: bash
+    run: |
+      echo "title=${{ steps.base.outputs.base == inputs.default-branch
+                      && format('v{0}', inputs.version
+                                        || steps.get-version.outputs.version)
+                      || steps.base.outputs.base == inputs.release-candidate
+                      && format('RC v{0}', inputs.version
+                                           || steps.get-version.outputs.version)
+                      || steps.base.outputs.base == 'dev'
+                      && steps.base.outputs.base }}" \
+      >> "$GITHUB_OUTPUT"
+  - name: Create PR
+    if: ${{ !steps.info.outputs.number }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    shell: bash
+    run: |
+      gh pr create \
+        --head "refs/heads/${{ inputs.head }}" \
+        --base "refs/heads/${{ steps.base.outputs.base }}" \
+        --title "${{ steps.title.outputs.title }}" \
+        --body "$(git log -1 --pretty=format:'%b')" \
+        --draft
+  - name: Update PR title
+    if: ${{ steps.info.outputs.number
+            && steps.title.outputs.title != steps.info.outputs.title
+            && steps.base.outputs.base == steps.info.outputs.baseRefName }}
+    shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+    run: |
+      gh pr edit ${{ steps.number.outputs.number }} \
+        --title  "${{ steps.title.outputs.title }}"

@@ -5,6 +5,8 @@ on:
   pull_request_review:
     types:
     - submitted
+    paths:
+    - version.txt
 
 jobs:
   merge:
@@ -14,68 +16,23 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-    - name: Merge
-      env:
-        GH_TOKEN: ${{ github.token }}
-        BODY: ${{ github.event.pull_request.body }}
-      shell: bash
-      run: |
-        gh pr merge \
-          ${{ github.event.pull_request.number }} \
-          --repo "$GITHUB_REPOSITORY" \
-          --subject "${{ github.event.pull_request.title }}" \
-          --body "$BODY" \
-          --auto \
-          ${{ github.event.pull_request.base.ref
-              == github.event.repository.default_branch
-              && '--squash' || '--merge'}} \
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          action.yaml
+          .github/actions/merge/action.yaml
           ${{ github.event.pull_request.base.ref
               != github.event.repository.default_branch
-              && github.event.pull_request.base.ref
-              != 'release-candidate'
-              && '--delete-branch \' || '' }}
-    - name: Checkout
-      if: github.event.pull_request.base.ref
-          == github.event.repository.default_branch
-      uses: actions/checkout@v4
-    - name: Count matching paths
-      if: github.event.pull_request.base.ref
-          == github.event.repository.default_branch
-      id: paths
-      env:
-        PATTERN: '(action.yaml)|(version.txt)|(README.md)'
-      run: |
-        printf "matches=%$( \
-          git diff --name-only \
-            ${{ github.event.pull_request.base.sha }} \
-            ${{ github.event.pull_request.head.sha }} \
-          | grep -c $PATTERN ).s" \
-        | tr ' ' 'x'
-        >> "$GITHUB_OUTPUT"
-    - name: Release
-      if: github.event.pull_request.base.ref
-          == github.event.repository.default_branch
-      uses: ./
-  create-pr:
-    needs:
-    - merge
-    if: github.event.pull_request.base.ref
-        != github.event.repository.default_branch
-    uses: ./.github/workflows/create_pr_from_version.yaml
-    permissions:
-       pull-requests: write
-       contents: read
-    with:
-      version-from: 'version-file'
-      version-path: 'version.txt'
-      head: ${{ github.event.pull_request.base.ref }}
-      base: ${{ github.ref_name == 'dev'
-                && 'release-candidate'
-                || github.ref_name == 'release-candidate'
-                && github.event.repository.default_branch
-                || 'dev' }}
-      prefix: ${{ github.ref_name == 'dev'
-                  && 'RC v'
-                  || github.ref_name == 'release-candidate'
-                  && 'v'
-                  || format('{0} v', github.ref_name) }}
+              && 'version.txt
+                  .github/actions/pr-create/action.yaml'
+              || '' }}
+        sparse-checkout-cone-mode: false
+    - name: Merge
+      uses: ./.github/actions/merge
+      with:
+        number: ${{ github.event.pull_request.number }}
+        base: ${{ github.event.pull_request.base.ref }}
+        subject: ${{ github.event.pull_request.title }}
+        body: ${{ github.event.pull_request.body }}
+        pattern: '(action.yaml)|(README.md)'

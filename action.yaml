@@ -2,28 +2,12 @@ name: Tag Version
 description: Create tag and update tags based on a version
 
 inputs:
-  tag:
-    description: Version to be updated
-    required: false
-    default: ''
-  message:
-    description: Annotated tag message
-    required: false
-    default: ''
-  latest-ref:
-    description: Name of the reference to the latest-release
-    required: false
-    default: latest
   draft:
     description: Whether to do a draft release
     required: false
-  release-candidate:
-    description: Whether this is a release candidate
+  dry-run:
+    description: Whether to not do any permanent changes
     required: false
-  release-candidate-suffix:
-    description: Suffix to be used with release candidate tags
-    required: false
-    default: 'rc'
   git-name:
     description: Name for the author of the tags
     required: false
@@ -32,9 +16,35 @@ inputs:
     description: Email for the author of the tags
     required: false
     default: 'github-actions@users.noreply.github.com'
-  dry-run:
-    description: Whether to not do any permanent changes
+  latest-ref:
+    description: Name of the reference to the latest-release
     required: false
+    default: latest
+  message:
+    description: Annotated tag message
+    required: false
+    default: ''
+  release-candidate:
+    description: Whether this is a release candidate
+    required: false
+  release-candidate-suffix:
+    description: Suffix to be used with release candidate tags
+    required: false
+    default: 'rc'
+  version-from:
+    description: Method of getting the version if not specified
+    required: false
+    type: choice
+    options:
+      - 'commit-message'
+      - 'pyproject.toml'
+      - 'version-file'
+    default: 'commit-message'
+  version-source:
+    description: Source containing the version, e.g. path to a file
+    required: false
+    type: string
+    default: ''
 
 outputs:
   tag:
@@ -47,6 +57,12 @@ outputs:
 runs:
   using: 'composite'
   steps:
+  - name: Get version
+    id: version
+    uses: lime-actions/version@latest
+    with:
+      from: ${{ inputs.version-from }}
+      source: ${{ inputs.version-source }}
   - name: Tag
     id: tag
     shell: bash
@@ -57,11 +73,10 @@ runs:
       git config user.name ${{ inputs.git-name }}
       git config user.email ${{ inputs.git-email }}
 
-      ${{ inputs.tag
-          && format('FULL_TAG="{0}"', inputs.tag)
-          ||
-      'FULL_TAG="$(git log -1 --pretty=format:"%s")"
-      MESSAGE="$(git log -1 --pretty=format:"%b")"' }}
+      FULL_TAG="v${{ steps.version.outputs.version }}"
+      ${{ inputs.version-from == 'commit-message'
+          && !inputs.message
+          && 'MESSAGE="$(git log -1 --pretty=format:"%b")"' }}
 
       ${{ inputs.release-candidate
           && format(
@@ -111,3 +126,7 @@ runs:
         --notes-from-tag \
         ${{ inputs.release-candidate && '--prerelease \' || '' }}
         ${{ inputs.draft && '--draft \' || '' }}
+
+branding:
+  icon: 'package'
+  color: 'green'

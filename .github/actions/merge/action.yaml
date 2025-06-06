@@ -1,0 +1,98 @@
+name: Merge
+
+inputs:
+  number:
+    description: PR number
+    required: true
+    type: string
+  base:
+    description: Target branch name
+    required: true
+    type: string
+  subject:
+    description: Merge commit subject
+    required: true
+    type: string
+    default: ''
+  body:
+    description: Merge commit body
+    required: false
+    type: string
+    default: ''
+  sha-head:
+    description: Head SHA hash
+    required: false
+    type: string
+    default: ''
+  sha-base:
+    description: Base SHA hash
+    required: false
+    type: string
+    default: ''
+  pattern:
+    description: RegEx Pattern on what files trigger release
+    type: string
+    default: ''
+  repo:
+    description: GitHub repository
+    type: string
+    default: ${{ github.repository }}
+  default-branch:
+    description: Default branch name
+    required: false
+    type: string
+    default: ${{ github.events.repository.default_branch }}
+  release-candidate:
+    description: Release candidate branch name
+    required: false
+    type: string
+    default: 'release-candidate'
+  token:
+    description: Access token
+    required: false
+    type: string
+    default: ${{ github.token }}
+
+runs:
+  using: 'composite'
+  steps:
+  - name: Merge
+    env:
+      GH_TOKEN: ${{ inputs.token }}
+      BODY: ${{ inputs.body }}
+    shell: bash
+    run: |
+      gh pr merge \
+        ${{ inputs.number }} \
+        --repo "${{ inputs.repo }}" \
+        --subject "${{ inputs.subject }}" \
+        --body "$BODY" \
+        --auto \
+        ${{ inputs.base == inputs.default-branch
+            && '--squash' || '--merge'}} \
+        ${{ inputs.base != inputs.default-branch
+            && inputs.base != inputs.release-candidate
+            && '--delete-branch \' || '' }}
+  - name: Create PR
+    if: inputs.base
+        != inputs.default-branch
+    uses: ./.github/actions/pr-create
+    with:
+      version-from: 'version-file'
+      head: ${{ inputs.base  }}
+  - name: Count matching paths
+    if: inputs.base == inputs.default-branch
+        && inputs.pattern
+    id: paths
+    shell: bash
+    env:
+      PATTERN: ${{ inputs.pattern }}
+    run: |
+      MATCHES="$(git diff --name-only \
+                  ${{ inputs.sha-base }} \
+                  ${{ inputs.sha-head }} \
+                | grep -c $PATTERN)"
+      echo "matches=${MATCHES/0/}" >> "$GITHUB_OUTPUT"
+  - name: GH release
+    if: ${{ !inputs.pattern || steps.paths.outputs.matches}}
+    uses: ./

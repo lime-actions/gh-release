@@ -1,0 +1,52 @@
+name: PR from Version
+
+inputs:
+
+  head:
+    description: Source branch name
+    required: false
+    type: string
+    default: ${{ github.ref_name }}
+
+  default_branch:
+    description: Default branch name
+    required: false
+    type: string
+    default: ${{ github.events.repository.default_branch }}
+
+  release_candidate:
+    description: Release candidate branch name to be checked against
+    required: false
+    type: string
+    default: 'release-candidate'
+
+  dev:
+    description: Dev branch name to be checked against
+    required: false
+    type: string
+    default: 'dev'
+
+outputs:
+  base:
+    description: Base branch
+    value:  ${{ inputs.head == inputs.release_candidate
+                && inputs.default_branch || steps.dev.outputs.base }}
+
+runs:
+  uses: 'composite'
+  steps:
+  - name: Check
+    id: dev
+    if: inputs.head == inputs.dev
+    env:
+      GH_TOKEN: ${{ github.token }}
+    shell: bash
+    run: |
+      if [ -z $(gh api repos/${{ github.repository }}/branches --jq '.[].name' \
+                | sed -n
+                    --expression='s\^${{ inputs.release_candidate }}$\x\p') ]
+      then
+        echo "base=${{ inputs.release_candidate }}" >> "$GITHUB_OUTPUT"
+      else
+        echo "base=${{ inputs.default_branch }}" >> "$GITHUB_OUTPUT"
+      fi
