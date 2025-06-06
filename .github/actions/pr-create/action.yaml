@@ -132,6 +132,7 @@ runs:
         echo '-' > .body.txt
       else
         echo "$BODY" > .body.txt
+      fi
 
       gh pr create \
         --repo "${{ inputs.repo }}"
