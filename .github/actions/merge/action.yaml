@@ -33,6 +33,10 @@ inputs:
     description: RegEx Pattern on what files trigger release
     type: string
     default: ''
+  repo:
+    description: GitHub repository
+    type: string
+    defauls: ${{ github.repository }}
   default-branch:
     description: Default branch name
     required: false
@@ -60,7 +64,7 @@ runs:
     run: |
       gh pr merge \
         ${{ inputs.number }} \
-        --repo "$GITHUB_REPOSITORY" \
+        --repo "${{ inputs.repo }}" \
         --subject "${{ inputs.subject }}" \
         --body "$BODY" \
         --auto \
