@@ -16,43 +16,50 @@ inputs:
     required: false
     type: string
     default: ''
-
   head:
     description: Source branch name
     required: false
     type: string
     default: ${{ github.ref_name }}
-
-  release-candidate:
+  release-candidate-branch:
     description: Release candidate branch name
     required: false
     type: string
     default: 'release-candidate'
-
   default-branch:
     description: Default branch name
     required: false
     type: string
-    default: ${{ github.events.repository.default_branch }}
-
+    default: ${{ github.event.repository.default_branch }}
+  token:
+    description: Access token
+    required: false
+    type: string
+    default: ${{ github.token }}
 runs:
   using: 'composite'
   steps:
   - name: Get base
     id: base
     shell: bash
+    env:
+      GH_TOKEN: ${{ inputs.token }}
     run: |
-      ${{ inputs.head == inputs.release-candidate
-          && format('echo "base={0}"', inputs.default-branch)
-          || format(
-            'if [ -z $(gh api repos/{0}/branches --jq ".[].name" \
-                      | sed -n --expression=''s\^{1}$\x\p'') ]
-            then
-              echo "base={1}" >> "$GITHUB_OUTPUT"
-            else
-              echo "base={2}" >> "$GITHUB_OUTPUT"
-            fi',
-            github.repository, inputs.release-candidate, inputs.default-branch)
+      ${{ inputs.head == inputs.release-candidate-branch
+          && format('echo "base={0}" >> "$GITHUB_OUTPUT"',
+                     inputs.default-branch)
+          || format('if [ -z $(gh api repos/{0}/branches --jq ".[].name" \
+                               | sed -n --expression=''s\^{1}$\x\p'') ]
+                    then
+                      echo "no rc"
+                      echo "base={2}" >> "$GITHUB_OUTPUT"
+                    else
+                      echo "RC"
+                      echo "base={1}" >> "$GITHUB_OUTPUT"
+                    fi',
+                    github.repository,
+                    inputs.release-candidate-branch,
+                    inputs.default-branch)
           }}
   - name: Get PR info
     id: info
@@ -64,16 +71,16 @@ runs:
         --repo "$GITHUB_REPOSITORY" \
         --head "${{ inputs.head }}" \
         --json number,title,baseRefName \
-        --template '{{range $key, $value := (index . 0)}}{{printf "%v=%v\n" $key $value}}{{end}}' \
+        --template '{{ if . }}{{ range $key, $value := (index . 0) }}{{ printf "%v=%v\n" $key $value }}{{ end }}{{ end }}' \
       >> "$GITHUB_OUTPUT"
   - name: Checkout
     if: steps.base.outputs.base == inputs.default-branch
         && !steps.info.outputs.baseRefName
         || steps.base.outputs.base == inputs.default-branch
         && steps.base.outputs.base == steps.info.outputs.baseRefName
-        || steps.base.outputs.base == inputs.release-candidate
+        || steps.base.outputs.base == inputs.release-candidate-branch
         && !steps.info.outputs.baseRefName
-        || steps.base.outputs.base == inputs.release-candidate
+        || steps.base.outputs.base == inputs.release-candidate-branch
         && steps.base.outputs.base == steps.info.outputs.baseRefName
     uses: actions/checkout@v4
     with:
@@ -86,9 +93,9 @@ runs:
         && !steps.info.outputs.baseRefName
         || steps.base.outputs.base == inputs.default-branch
         && steps.base.outputs.base == steps.info.outputs.baseRefName
-        || steps.base.outputs.base == inputs.release-candidate
+        || steps.base.outputs.base == inputs.release-candidate-branch
         && !steps.info.outputs.baseRefName
-        || steps.base.outputs.base == inputs.release-candidate
+        || steps.base.outputs.base == inputs.release-candidate-branch
         && steps.base.outputs.base == steps.info.outputs.baseRefName
     uses: lime-actions/version@latest
     with:
@@ -101,7 +108,7 @@ runs:
       echo "title=${{ steps.base.outputs.base == inputs.default-branch
                       && format('v{0}', inputs.version
                                         || steps.get-version.outputs.version)
-                      || steps.base.outputs.base == inputs.release-candidate
+                      || steps.base.outputs.base == inputs.release-candidate-branch
                       && format('RC v{0}', inputs.version
                                            || steps.get-version.outputs.version)
                       || steps.base.outputs.base == 'dev'

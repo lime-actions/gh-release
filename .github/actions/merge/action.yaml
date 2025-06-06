@@ -19,6 +19,20 @@ inputs:
     required: false
     type: string
     default: ''
+  version-from:
+    description: Method of getting the version if not specified
+    required: false
+    type: choice
+    options:
+      - 'commit-message'
+      - 'pyproject.toml'
+      - 'version-file'
+    default: 'version-file'
+  version-source:
+    description: Source containing the version, e.g. path to a file
+    required: false
+    type: string
+    default: ''
   sha-head:
     description: Head SHA hash
     required: false
@@ -78,8 +92,11 @@ runs:
         != inputs.default-branch
     uses: ./.github/actions/pr-create
     with:
-      version-from: 'version-file'
       head: ${{ inputs.base  }}
+      version-from: ${{ inputs.version-from }}
+      version-source: ${{ inputs.version-source }}
+      release-candidate: ${{ inputs.release-candidate}}
+      default-branch: ${{ inputs.default-branch }}
   - name: Count matching paths
     if: inputs.base == inputs.default-branch
         && inputs.pattern
