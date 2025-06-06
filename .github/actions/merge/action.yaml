@@ -1,5 +1,4 @@
 name: Merge
-run-name: Merging ${{ github.event.pull_request.head.ref }} -> ${{ inputs.base  }}
 
 inputs:
   number:
@@ -81,6 +80,7 @@ runs:
     if: inputs.base == inputs.default-branch
         && inputs.pattern
     id: paths
+    shell: bash
     env:
       PATTERN: ${{ inputs.pattern }}
     run: |
