@@ -119,6 +119,36 @@ runs:
                       || steps.base.outputs.base == 'dev'
                       && steps.base.outputs.base }}" \
       >> "$GITHUB_OUTPUT"
+  - name: Debug and Create PR
+    shell: bash
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    run: |
+      gh --version
+
+      # Save commit body
+      BODY="$(git log -1 --pretty=format:'%B')"
+
+      # Trim and output to file
+      if [ -z "$BODY" ]; then
+        echo 'default body' > .body.txt
+      else
+        echo "$BODY" | sed 's/ *$//' > .body.txt
+      fi
+
+      echo "::group::Body Debug"
+      cat -A .body.txt
+      echo "::endgroup::"
+
+      echo "::group::GH PR Create"
+      gh pr create \
+        --repo "lime-actions/gh-release" \
+        --head "dev" \
+        --base "release-candidate" \
+        --title "RC v0.1.1" \
+        --body-file .body.txt \
+        --draft
+      echo "::endgroup::"
   - name: Create PR
     if: ${{ !steps.info.outputs.number }}
     env:
