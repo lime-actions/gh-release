@@ -125,6 +125,7 @@ runs:
       GH_TOKEN: ${{ github.token }}
     shell: bash
     run: |
+      echo "$(git log -1 --pretty=format:'%B')"
       gh pr create \
         --repo "${{ inputs.repo }}"
         --head "refs/heads/${{ inputs.head }}" \
