@@ -120,25 +120,13 @@ runs:
                       && steps.base.outputs.base }}" \
       >> "$GITHUB_OUTPUT"
   - name: Debug and Create PR
+    if: ${{ !steps.info.outputs.number }}
     shell: bash
     env:
       GH_TOKEN: ${{ inputs.token }}
     run: |
-      gh --version
-
       # Save commit body
-      BODY="$(git log -1 --pretty=format:'%B')"
-
-      # Trim and output to file
-      if [ -z "$BODY" ]; then
-        echo 'default body' > .body.txt
-      else
-        printf "%s\n" "$BODY" > .body.txt
-      fi
-
-      echo "::group::Body Debug"
-      cat -A .body.txt
-      echo "::endgroup::"
+      printf "%s\n" "$(git log -1 --pretty=format:'%B')" > .body.txt
 
       echo "::group::GH PR Create"
       gh pr create \
@@ -149,30 +137,6 @@ runs:
         --body-file .body.txt \
         --draft
       echo "::endgroup::"
-  - name: Create PR
-    if: ${{ !steps.info.outputs.number }}
-    env:
-      GH_TOKEN: ${{ inputs.token }}
-    shell: bash
-    run: |
-      gh --version
-      BODY="$(git log -1 --pretty=format:'%B')"
-
-      if [ -z "$BODY" ]; then
-        echo '-' > .body.txt
-      else
-        echo "$BODY" > .body.txt
-      fi
-
-      cat -A .body.txt
-
-      gh pr create \
-        --repo "${{ inputs.repo }}"
-        --head "${{ inputs.head }}" \
-        --base "${{ steps.base.outputs.base }}" \
-        --title "${{ steps.title.outputs.title }}" \
-        --body-file .body.txt \
-        --draft
   - name: Update PR title
     if: ${{ steps.info.outputs.number
             && steps.title.outputs.title != steps.info.outputs.title
