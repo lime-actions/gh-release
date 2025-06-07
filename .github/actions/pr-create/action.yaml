@@ -81,7 +81,7 @@ runs:
                     inputs.default-branch)
           }}
       echo "$BASE"
-      echo "$BASE" >> "$GITHUB_OUTPUT"
+      echo "base=$BASE" >> "$GITHUB_OUTPUT"
       echo "::endgroup::"
   - name: Get PR info
     id: info
