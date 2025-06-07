@@ -103,6 +103,13 @@ runs:
       release-candidate-branch: ${{ inputs.release-candidate-branch }}
       default-branch: ${{ inputs.default-branch }}
       token: ${{ inputs.token }}
+  - name: Check
+    shell: bash
+    run: |
+      echo "${{ steps.pr.outputs.number }}"
+      echo "${{ steps.pr.outputs.base }}"
+      echo "${{ steps.pr.outputs.draft }}"
+      echo "${{ steps.pr.outputs.title }}"
   - name: Count matching paths
     id: paths
     if: inputs.base == inputs.default-branch
