@@ -115,8 +115,9 @@ runs:
     run: |
       echo "::group::Matching paths"
       MATCHES="${{ inputs.pattern
-                  && '$(git diff ${{ inputs.sha-base }} ${{ inputs.sha-head }} \
-                        --name-only | grep -c $PATTERN)'
+                  && format(
+                    '$(git diff {0} {1} --name-only | grep -c $PATTERN)',
+                    inputs.sha-base, inputs.sha-head)
                   || 'pass' }}"
       echo "$MATCHES"
       echo "matches=${MATCHES/0/}" >> "$GITHUB_OUTPUT"
