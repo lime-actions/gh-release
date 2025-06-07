@@ -3,22 +3,24 @@ name: Merge
 inputs:
   number:
     description: PR number
-    required: true
+    required: false
     type: string
+    default: ${{ github.event.pull_request.number }}
   base:
     description: Target branch name
-    required: true
+    required: false
     type: string
+    default: ${{ github.event.pull_request.base.ref }}
   subject:
     description: Merge commit subject
-    required: true
+    required: false
     type: string
-    default: ''
+    default: ${{ github.event.pull_request.title }}
   body:
     description: Merge commit body
     required: false
     type: string
-    default: ''
+    default: ${{ github.event.pull_request.body }}
   version-from:
     description: Method of getting the version if not specified
     required: false
@@ -37,12 +39,12 @@ inputs:
     description: Head SHA hash
     required: false
     type: string
-    default: ''
+    default: ${{ github.event.pull_request.head.sha }}
   sha-base:
     description: Base SHA hash
     required: false
     type: string
-    default: ''
+    default: ${{ github.event.pull_request.base.sha }}
   pattern:
     description: RegEx Pattern on what files trigger release
     type: string
@@ -56,7 +58,7 @@ inputs:
     required: false
     type: string
     default: ${{ github.event.repository.default_branch }}
-  release-candidate:
+  release-candidate-branch:
     description: Release candidate branch name
     required: false
     type: string
@@ -76,6 +78,7 @@ runs:
       BODY: ${{ inputs.body }}
     shell: bash
     run: |
+      echo "::group::Merging the PR"
       gh pr merge \
         ${{ inputs.number }} \
         --repo "${{ inputs.repo }}" \
@@ -85,31 +88,49 @@ runs:
         ${{ inputs.base == inputs.default-branch
             && '--squash' || '--merge'}} \
         ${{ inputs.base != inputs.default-branch
-            && inputs.base != inputs.release-candidate
+            && inputs.base != inputs.release-candidate-branch
             && '--delete-branch \' || '' }}
+      echo "::endgroup::"
   - name: Create PR
-    if: inputs.base
-        != inputs.default-branch
+    id: pr
+    if: inputs.base != inputs.default-branch
     uses: ./.github/actions/pr-create
     with:
       head: ${{ inputs.base  }}
       version-from: ${{ inputs.version-from }}
       version-source: ${{ inputs.version-source }}
-      release-candidate-branch: ${{ inputs.release-candidate}}
+      repo: ${{ inputs.repo }}
+      release-candidate-branch: ${{ inputs.release-candidate-branch }}
       default-branch: ${{ inputs.default-branch }}
+      token: ${{ inputs.token }}
   - name: Count matching paths
-    if: inputs.base == inputs.default-branch
-        && inputs.pattern
     id: paths
+    if: inputs.base == inputs.default-branch
+        || steps.pr.outputs.base == inputs.default-branch
+        && !steps.pr.outputs.draft
+    continue-on-error: true
     shell: bash
     env:
       PATTERN: ${{ inputs.pattern }}
     run: |
-      MATCHES="$(git diff --name-only \
-                  ${{ inputs.sha-base }} \
-                  ${{ inputs.sha-head }} \
-                | grep -c $PATTERN)"
+      echo "::group::Matching paths"
+      MATCHES="${{ inputs.pattern
+                  && '$(git diff ${{ inputs.sha-base }} ${{ inputs.sha-head }} \
+                        --name-only | grep -c $PATTERN)'
+                  || 'pass' }}"
+      echo "$MATCHES"
       echo "matches=${MATCHES/0/}" >> "$GITHUB_OUTPUT"
+      echo "::endgroup::"
   - name: GH release
-    if: ${{ !inputs.pattern || steps.paths.outputs.matches}}
+    if: ${{ steps.paths.outputs.matches
+            && inputs.base == inputs.default_branch
+            || steps.paths.outputs.matches
+            && steps.pr.outputs.base == inputs.default-branch
+            && !steps.pr.outputs.draft }}
     uses: ./
+    with:
+      message: ${{ inputs.base != inputs.default-branch
+                    && 'Release candidate' || '' }}
+      release-candidate: ${{ steps.pr.outputs.base == inputs.default-branch }}
+      version-from: ${{ inputs.base == inputs.default-branch
+                        && 'commit-message' || 'version-file' }}
