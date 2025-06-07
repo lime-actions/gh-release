@@ -48,7 +48,7 @@ outputs:
     value: ${{ steps.base.outputs.base }}
   draft:
     description: Whether the PR is in draft state
-    value: ${{ steps.info.outputs.isDraft != 'false' }}
+    value: ${{ steps.info.outputs.isDraft != 'false' && 'true' || '' }}
   number:
     description: Number of the PR
     value: ${{ steps.info.outputs.number }}
