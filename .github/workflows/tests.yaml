@@ -25,14 +25,14 @@ jobs:
         git config user.email 'github-actions@users.noreply.github.com'
         git config user.name 'GitHub Actions'
         git add test
-        git commit -m 'v1.2.3.alpha.ö'
+        git commit -m 'v1.2.alpha.ö'
     - name: Release from commit
       uses: ./
       with:
         dry-run: true
     - name: Check
       run: |
-        if ! git rev-parse 'v1.2.3.alpha.ö' >/dev/null 2>&1
+        if ! git rev-parse 'v1.2.alpha.ö' >/dev/null 2>&1
         then
           exit 101
         fi
@@ -45,14 +45,14 @@ jobs:
       id: release-from-tag
       uses: ./
       with:
-        tag: 'v1.2.3.alpha.ö'
+        tag: 'v1.2.alpha.ö'
         dry-run: true
     - name: Check
       run: |
-        if [ '${{ steps.release-from-tag.outputs.tag }}' != 'v1.2.3.alpha.ö' ]; then exit 101
-        elif ! git rev-parse 'v1.2.3.alpha.ö' >/dev/null 2>&1; then exit 102
-        elif ! git rev-parse 'v1.2.3.alpha' >/dev/null 2>&1; then exit 103
-        elif ! git rev-parse 'v1.2.3' >/dev/null 2>&1; then exit 104
+        if [ '${{ steps.release-from-tag.outputs.tag }}' != 'v1.2.alpha.ö' ]; then exit 101
+        elif ! git rev-parse 'v1.2.alpha.ö' >/dev/null 2>&1; then exit 102
+        elif ! git rev-parse 'v1.2.alpha' >/dev/null 2>&1; then exit 103
+        elif ! git rev-parse 'v1.2' >/dev/null 2>&1; then exit 104
         elif ! git rev-parse 'latest' >/dev/null 2>&1; then exit 105
         fi
     - name: Reset tags
@@ -63,12 +63,12 @@ jobs:
     - name: Release candidate
       uses: ./
       with:
-        tag: 'v1.2.3.alpha.ö'
+        tag: 'v1.2.alpha.ö'
         release-candidate: true
         dry-run: true
     - name: Check
       run: |
-        if ! git rev-parse 'v1.2.3.alpha.ö.rc1' >/dev/null 2>&1; then
+        if ! git rev-parse 'v1.2.alpha.ö.rc1' >/dev/null 2>&1; then
           exit 101
         elif ! git rev-parse 'latest-rc' >/dev/null 2>&1; then
           exit 102
@@ -82,12 +82,12 @@ jobs:
       id: release-suffix
       uses: ./
       with:
-        tag: 'v1.2.3.alpha.ö'
+        tag: 'v1.2.alpha.ö'
         release-candidate: true
         release-candidate-suffix: 'RC'
         dry-run: true
     - name: Fail
-      if: steps.release-suffix.outputs.tag != 'v1.2.3.alpha.ö.RC1'
+      if: steps.release-suffix.outputs.tag != 'v1.2.alpha.ö.RC1'
       run: |
         echo "${{ steps.release-suffix.outputs.tag }}"
         exit 101
