@@ -103,8 +103,6 @@ runs:
       release-candidate-branch: ${{ inputs.release-candidate-branch }}
       default-branch: ${{ inputs.default-branch }}
       token: ${{ inputs.token }}
-  - name: Check
-    run:
   - name: Count matching paths
     id: paths
     if: inputs.base == inputs.default-branch
