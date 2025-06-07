@@ -104,6 +104,7 @@ runs:
       default-branch: ${{ inputs.default-branch }}
       token: ${{ inputs.token }}
   - name: Check
+    shell: bash
     run: |
       echo "${{ steps.pr.outputs.number }}"
       echo "${{ steps.pr.outputs.base }}"
