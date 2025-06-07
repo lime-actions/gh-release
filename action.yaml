@@ -74,8 +74,10 @@ runs:
       GH_TOKEN: ${{ inputs.token }}
       MESSAGE: ${{ inputs.message }}
     run: |
+      echo "::group::Git config"
       git config user.name ${{ inputs.git-name }}
       git config user.email ${{ inputs.git-email }}
+      echo "::endgroup::"
 
       FULL_TAG="v${{ steps.version.outputs.version }}"
       ${{ inputs.version-from == 'commit-message'

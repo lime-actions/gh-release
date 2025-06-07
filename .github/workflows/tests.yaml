@@ -1,4 +1,4 @@
-name: Test
+name: Tests
 run-name: Testing the action
 on:
   push:
@@ -25,14 +25,14 @@ jobs:
         git config user.email 'github-actions@users.noreply.github.com'
         git config user.name 'GitHub Actions'
         git add test
-        git commit -m 'test1.test2.test3'
+        git commit -m 'vtest1.test2.test3'
     - name: Release from commit
       uses: ./
       with:
         dry-run: true
     - name: Check
       run: |
-        if ! git rev-parse 'test1.test2.test3' >/dev/null 2>&1
+        if ! git rev-parse 'vtest1.test2.test3' >/dev/null 2>&1
         then
           exit 101
         fi
