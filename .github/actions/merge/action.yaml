@@ -109,6 +109,7 @@ runs:
       echo "${{ steps.pr.outputs.number }}"
       echo "${{ steps.pr.outputs.base }}"
       echo "${{ steps.pr.outputs.draft }}"
+      echo "${{ !steps.pr.outputs.draft }}"
       echo "${{ steps.pr.outputs.title }}"
   - name: Count matching paths
     id: paths
