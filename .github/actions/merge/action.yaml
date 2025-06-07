@@ -78,6 +78,7 @@ runs:
       BODY: ${{ inputs.body }}
     shell: bash
     run: |
+      echo "::group::Merging the PR"
       gh pr merge \
         ${{ inputs.number }} \
         --repo "${{ inputs.repo }}" \
@@ -89,6 +90,7 @@ runs:
         ${{ inputs.base != inputs.default-branch
             && inputs.base != inputs.release-candidate-branch
             && '--delete-branch \' || '' }}
+      echo "::endgroup::"
   - name: Create PR
     id: pr
     if: inputs.base != inputs.default-branch
@@ -111,12 +113,14 @@ runs:
     env:
       PATTERN: ${{ inputs.pattern }}
     run: |
+      echo "::group::Matching paths"
       MATCHES="${{ inputs.pattern
                   && '$(git diff ${{ inputs.sha-base }} ${{ inputs.sha-head }} \
                         --name-only | grep -c $PATTERN)'
                   || 'pass' }}"
       echo "$MATCHES"
       echo "matches=${MATCHES/0/}" >> "$GITHUB_OUTPUT"
+      echo "::endgroup::"
   - name: GH release
     if: ${{ steps.paths.outputs.matches
             && inputs.base == inputs.default_branch
