@@ -3,22 +3,24 @@ name: Merge
 inputs:
   number:
     description: PR number
-    required: true
+    required: false
     type: string
+    default: ${{ github.event.pull_request.number }}
   base:
     description: Target branch name
-    required: true
+    required: false
     type: string
+    default: ${{ github.event.pull_request.base.ref }}
   subject:
     description: Merge commit subject
-    required: true
+    required: false
     type: string
-    default: ''
+    default: ${{ github.event.pull_request.title }}
   body:
     description: Merge commit body
     required: false
     type: string
-    default: ''
+    default: ${{ github.event.pull_request.body }}
   version-from:
     description: Method of getting the version if not specified
     required: false
@@ -100,26 +102,31 @@ runs:
       default-branch: ${{ inputs.default-branch }}
       token: ${{ inputs.token }}
   - name: Count matching paths
-    if: inputs.base == inputs.default-branch && inputs.pattern
-    continue-on-error: true
     id: paths
+    if: inputs.base == inputs.default-branch
+        || steps.pr.outputs.base == inputs.default-branch
+        && !steps.pr.outputs.draft
+    continue-on-error: true
     shell: bash
     env:
       PATTERN: ${{ inputs.pattern }}
     run: |
-      MATCHES="$(git diff --name-only \
-                  ${{ inputs.sha-base }} \
-                  ${{ inputs.sha-head }} \
-                | grep -c $PATTERN)"
+      MATCHES="${{ inputs.pattern
+                  && '$(git diff ${{ inputs.sha-base }} ${{ inputs.sha-head }} \
+                        --name-only | grep -c $PATTERN)'
+                  || 'pass' }}"
       echo "$MATCHES"
       echo "matches=${MATCHES/0/}" >> "$GITHUB_OUTPUT"
   - name: GH release
-    if: ${{ !inputs.pattern || steps.paths.outputs.matches }}
+    if: ${{ steps.paths.outputs.matches
+            && inputs.base == inputs.default_branch
+            || steps.paths.outputs.matches
+            && steps.pr.outputs.base == inputs.default-branch
+            && !steps.pr.outputs.draft }}
     uses: ./
     with:
       message: ${{ inputs.base != inputs.default-branch
                     && 'Release candidate' || '' }}
-      release-candidate: ${{ steps.pr.outputs.base == inputs.default-branch
-                             && !steps.pr.outputs.draft }}
+      release-candidate: ${{ steps.pr.outputs.base == inputs.default-branch }}
       version-from: ${{ inputs.base == inputs.default-branch
                         && 'commit-message' || 'version-file' }}
