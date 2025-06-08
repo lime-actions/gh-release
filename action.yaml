@@ -93,7 +93,7 @@ runs:
           && format(
       'echo "::group::Getting available tag"
       N=1
-      while git tag --list "$FULL_TAG.{0}$N" >/dev/null 2>&1; do
+      while git rev-parse --verify --quiet "refs/tags/$FULL_TAG.{0}$N" >/dev/null; do
         echo $N
         ((N++))
       done
