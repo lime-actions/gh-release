@@ -86,7 +86,7 @@ jobs:
       uses: ./
       with:
         version-from: 'version-file'
-        version-source: 'tests/version_0.1.2.txt'
+        version-source: 'tests/version_1.2.alpha.ö.txt'
         release-candidate: true
         release-candidate-suffix: 'RC'
         dry-run: true
