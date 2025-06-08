@@ -63,7 +63,7 @@ runs:
   steps:
   - name: Check
     run: |
-      echo "not release candidate: ${{ !inpust.release-candidate }}"
+      echo "not release candidate: ${{ !inputs.release-candidate }}"
   - name: Get version
     id: version
     uses: lime-actions/version@latest
