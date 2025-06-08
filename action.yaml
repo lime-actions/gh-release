@@ -80,6 +80,8 @@ runs:
       git config user.email ${{ inputs.git-email }}
       echo "::endgroup::"
 
+      git fetch --tags --quiet
+
       FULL_TAG="v${{ steps.version.outputs.version }}"
       ${{ inputs.version-from == 'commit-message'
           && !inputs.message
@@ -93,6 +95,7 @@ runs:
           && format(
       'echo "::group::Getting available tag"
       N=1
+      RC_TAG="$FULL_TAG"
       while git rev-parse --verify --quiet "refs/tags/$FULL_TAG.{0}$N" >/dev/null; do
         echo $N
         ((N++))
