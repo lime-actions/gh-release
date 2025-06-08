@@ -1,0 +1,11 @@
+name: Reset tags
+
+runs:
+  using: 'composite'
+  steps:
+  - name: Reset tags
+    shell: bash
+    run: |
+      comm -23 <(git tag | sort) <(git ls-remote --tags origin | cut -f2 \
+      | sed 's#refs/tags/##' | sort) \
+      | xargs -n 1 git tag -d
