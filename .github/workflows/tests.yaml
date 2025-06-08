@@ -27,13 +27,14 @@ jobs:
         git add test
         git commit -m 'v1.2.alpha.ö'
     - name: Release from commit
+      id: release-from-commit
       uses: ./
       with:
         version-from: 'commit-message'
         dry-run: true
     - name: Check
       run: |
-        if [ '${{ steps.release-from-tag.outputs.tag }}' != 'v1.2.alpha.ö' ]; then exit 101
+        if [ '${{ steps.release-from-commit.outputs.tag }}' != 'v1.2.alpha.ö' ]; then exit 101
         elif ! git rev-parse 'v1.2.alpha.ö' >/dev/null 2>&1; then exit 102
         elif ! git rev-parse 'v1.2.alpha' >/dev/null 2>&1; then exit 103
         elif ! git rev-parse 'v1.2' >/dev/null 2>&1; then exit 104
