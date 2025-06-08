@@ -80,8 +80,6 @@ runs:
       git config user.email ${{ inputs.git-email }}
       echo "::endgroup::"
 
-      git fetch --tags --quiet
-
       FULL_TAG="v${{ steps.version.outputs.version }}"
       ${{ inputs.version-from == 'commit-message'
           && !inputs.message
