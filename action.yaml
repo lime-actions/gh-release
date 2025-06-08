@@ -89,13 +89,11 @@ runs:
       ${{ inputs.release-candidate
           && format(
       'N=1
-      while
-        RC_TAG="$FULL_TAG.{0}$N"
-        git ref-parse "$RC_TAG" >/dev/null 2>&1
-      do
+      while git tag --list "$FULL_TAG.{0}$N" >/dev/null 2>&1; do
         ((N++))
       done
-      FULL_TAG=$RC_TAG', inputs.release-candidate-suffix)
+
+      FULL_TAG="$FULL_TAG.rc$N"', inputs.release-candidate-suffix)
           || '' }}
 
       echo "tag=$FULL_TAG" >> "$GITHUB_OUTPUT"
