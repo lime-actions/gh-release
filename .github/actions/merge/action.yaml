@@ -132,7 +132,7 @@ runs:
       echo "::endgroup::"
   - name: GH release
     if: ${{ steps.paths.outputs.matches
-            && inputs.base == inputs.default_branch
+            && inputs.base == inputs.default-branch
             || steps.paths.outputs.matches
             && steps.pr.outputs.base == inputs.default-branch
             && !steps.pr.outputs.draft }}
