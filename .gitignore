@@ -14,6 +14,6 @@ sandbox
 
 !.github
 
-## Pre-cómmit
+## Pre-commit
 
 !.pre-commit-config.yaml
