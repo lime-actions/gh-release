@@ -103,14 +103,14 @@ runs:
       release-candidate-branch: ${{ inputs.release-candidate-branch }}
       default-branch: ${{ inputs.default-branch }}
       token: ${{ inputs.token }}
-  # - name: Check
-  #   shell: bash
-  #   run: |
-  #     echo "${{ steps.pr.outputs.number }}"
-  #     echo "${{ steps.pr.outputs.base }}"
-  #     echo "${{ steps.pr.outputs.draft }}"
-  #     echo "${{ !steps.pr.outputs.draft }}"
-  #     echo "${{ steps.pr.outputs.title }}"
+  - name: Check
+    shell: bash
+    run: |
+      echo "${{ steps.pr.outputs.number }}"
+      echo "${{ steps.pr.outputs.base }}"
+      echo "${{ steps.pr.outputs.draft }}"
+      echo "${{ !steps.pr.outputs.draft }}"
+      echo "${{ steps.pr.outputs.title }}"
   - name: Count matching paths
     id: paths
     if: inputs.base == inputs.default-branch
@@ -126,8 +126,8 @@ runs:
                    && format(
                      '$(git diff {0} {1} --name-only | grep -c $PATTERN)',
                      inputs.sha-base, inputs.sha-head)
-                   || 'pass' }}"
-      echo "$MATCHES"
+                   || '1' }}"
+      echo "${MATCHES/0/}"
       echo "matches=${MATCHES/0/}" >> "$GITHUB_OUTPUT"
       echo "::endgroup::"
   - name: GH release
@@ -141,5 +141,4 @@ runs:
       message: ${{ inputs.base != inputs.default-branch
                     && 'Release candidate' || '' }}
       release-candidate: ${{ steps.pr.outputs.base == inputs.default-branch }}
-      version-from: ${{ inputs.base == inputs.default-branch
-                        && 'commit-message' || 'version-file' }}
+      version-from: 'version-file'

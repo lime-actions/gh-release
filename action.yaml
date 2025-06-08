@@ -43,12 +43,10 @@ inputs:
   version-source:
     description: Source containing the version, e.g. path to a file
     required: false
-    type: string
     default: ''
   token:
     description: Access token
     required: false
-    type: string
     default: ${{ github.token }}
 outputs:
   tag:
@@ -61,6 +59,10 @@ outputs:
 runs:
   using: 'composite'
   steps:
+  - name: Check
+    shell: bash
+    run: |
+      echo "not release candidate: ${{ !inputs.release-candidate }}"
   - name: Get version
     id: version
     uses: lime-actions/version@latest
@@ -91,7 +93,7 @@ runs:
 
       git tag --list
 
-      ${{ inputs.release-candidate
+      ${{ inputs.release-candidate  == 'true'
           && format(
       'echo "::group::Getting available tag"
       N=1
@@ -115,14 +117,14 @@ runs:
 
       echo "::group::Updating latest"
       git tag "${{ inputs.latest-ref
-                  }}${{ inputs.release-candidate
+                  }}${{ inputs.release-candidate == 'true'
                         && format('-{0}', inputs.release-candidate-suffix)
                         || '' }}" \
         --force --message="$MESSAGE"
       echo "::endgroup::"
 
       echo "::group::Updating higher level version tags"
-      ${{ !inputs.release-candidate
+      ${{ inputs.release-candidate != 'true'
           &&
       'TAG=$FULL_TAG;
       while
@@ -151,7 +153,7 @@ runs:
         --title "${{ steps.tag.outputs.tag }}" \
         --verify-tag \
         --notes-from-tag \
-        ${{ inputs.release-candidate && '--prerelease \' || '' }}
+        ${{ inputs.release-candidate == 'true' && '--prerelease \' || '' }}
         ${{ inputs.draft && '--draft \' || '' }}
 
 branding:
