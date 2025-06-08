@@ -19,6 +19,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
+        fetch-tags: true
         sparse-checkout: |
           action.yaml
           .github/actions/merge/action.yaml
