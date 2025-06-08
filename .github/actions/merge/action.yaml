@@ -45,7 +45,7 @@ inputs:
     required: false
     type: string
     default: ${{ github.event.pull_request.base.sha }}
-  pattern:
+  paths:
     description: RegEx Pattern on what files trigger release
     type: string
     default: ''
@@ -103,6 +103,14 @@ runs:
       release-candidate-branch: ${{ inputs.release-candidate-branch }}
       default-branch: ${{ inputs.default-branch }}
       token: ${{ inputs.token }}
+  # - name: Check
+  #   shell: bash
+  #   run: |
+  #     echo "${{ steps.pr.outputs.number }}"
+  #     echo "${{ steps.pr.outputs.base }}"
+  #     echo "${{ steps.pr.outputs.draft }}"
+  #     echo "${{ !steps.pr.outputs.draft }}"
+  #     echo "${{ steps.pr.outputs.title }}"
   - name: Count matching paths
     id: paths
     if: inputs.base == inputs.default-branch
@@ -111,13 +119,14 @@ runs:
     continue-on-error: true
     shell: bash
     env:
-      PATTERN: ${{ inputs.pattern }}
+      PATTERN: ${{ inputs.paths }}
     run: |
       echo "::group::Matching paths"
-      MATCHES="${{ inputs.pattern
-                  && '$(git diff ${{ inputs.sha-base }} ${{ inputs.sha-head }} \
-                        --name-only | grep -c $PATTERN)'
-                  || 'pass' }}"
+      MATCHES="${{ inputs.paths
+                   && format(
+                     '$(git diff {0} {1} --name-only | grep -c $PATTERN)',
+                     inputs.sha-base, inputs.sha-head)
+                   || 'pass' }}"
       echo "$MATCHES"
       echo "matches=${MATCHES/0/}" >> "$GITHUB_OUTPUT"
       echo "::endgroup::"

@@ -19,6 +19,8 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
+        fetch-depth: 0
+        fetch-tags: true
         sparse-checkout: |
           action.yaml
           .github/actions/merge/action.yaml
@@ -31,16 +33,21 @@ jobs:
     - name: Merge
       uses: ./.github/actions/merge
       with:
-        pattern: '(action.yaml)|(README.md)'
+        # paths: '(action.yaml)|(README.md)'
+        version-from: 'version-file'
     - name: Merge back
       if: github.event.pull_request.base.ref
           == github.event.repository.default_branch
       run: |
         git config user.name GitHub Actions
         git config user.email github-actions@users.noreply.github.com
+
+        git fetch
+
         git checkout release-candidate
-        git merge ${{ github.event.pull_request.base.ref }} -X ours
+        git merge origin/${{ github.event.pull_request.base.ref }} -X ours
         git push
+
         git checkout dev
-        git merge ${{ github.event.pull_request.base.ref }} -X ours
+        git merge origin/release-candidate
         git push

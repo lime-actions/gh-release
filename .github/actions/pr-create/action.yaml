@@ -48,7 +48,7 @@ outputs:
     value: ${{ steps.base.outputs.base }}
   draft:
     description: Whether the PR is in draft state
-    value: ${{ steps.info.outputs.isDraft != 'false' }}
+    value: ${{ steps.info.outputs.isDraft != 'false' && 'true' || '' }}
   number:
     description: Number of the PR
     value: ${{ steps.info.outputs.number }}
@@ -65,34 +65,38 @@ runs:
     env:
       GH_TOKEN: ${{ inputs.token }}
     run: |
+      echo "::group::Selecting base"
       ${{ inputs.head == inputs.release-candidate-branch
-          && format('echo "base={0}" >> "$GITHUB_OUTPUT"',
+          && format('BASE="{0}"',
                      inputs.default-branch)
           || format('if [ -z $(gh api repos/{0}/branches --jq ".[].name" \
                                | sed -n --expression=''s\^{1}$\x\p'') ]
                     then
-                      echo "no rc"
-                      echo "base={2}" >> "$GITHUB_OUTPUT"
+                      BASE="{2}"
                     else
-                      echo "RC"
-                      echo "base={1}" >> "$GITHUB_OUTPUT"
+                      BASE="{1}"
                     fi',
                     inputs.repo,
                     inputs.release-candidate-branch,
                     inputs.default-branch)
           }}
+      echo "$BASE"
+      echo "base=$BASE" >> "$GITHUB_OUTPUT"
+      echo "::endgroup::"
   - name: Get PR info
     id: info
     shell: bash
     env:
       GH_TOKEN: ${{ github.token }}
     run: |
+      echo "::group::Get PR info"
       gh pr list \
         --repo "${{ inputs.repo }}" \
         --head "${{ inputs.head }}" \
-        --json number,title,baseRefName \
+        --json number,title,baseRefName,isDraft \
         --template '{{ if . }}{{ range $key, $value := (index . 0) }}{{ printf "%v=%v\n" $key $value }}{{ end }}{{ end }}' \
       >> "$GITHUB_OUTPUT"
+      echo "::endgroup::"
   - name: Checkout
     if: steps.base.outputs.base == inputs.default-branch
         && !steps.info.outputs.baseRefName
@@ -125,6 +129,7 @@ runs:
     id: title
     shell: bash
     run: |
+      echo "::group::Format title"
       echo "title=${{ steps.base.outputs.base == inputs.default-branch
                       && format('v{0}', inputs.version
                                         || steps.get-version.outputs.version)
@@ -134,6 +139,7 @@ runs:
                       || steps.base.outputs.base == 'dev'
                       && steps.base.outputs.base }}" \
       >> "$GITHUB_OUTPUT"
+      echo "::endgroup::"
   - name: Debug and Create PR
     if: ${{ !steps.info.outputs.number }}
     shell: bash
@@ -160,6 +166,8 @@ runs:
     env:
       GH_TOKEN: ${{ github.token }}
     run: |
+      echo "::group::Update PR title"
       gh pr edit ${{ steps.info.outputs.number }} \
         --repo "${{ inputs.repo }}" \
         --title "${{ steps.title.outputs.title }}"
+      echo "::endgroup::"

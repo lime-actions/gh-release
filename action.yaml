@@ -74,7 +74,8 @@ runs:
       GH_TOKEN: ${{ inputs.token }}
       MESSAGE: ${{ inputs.message }}
     run: |
-      echo "::group::Git config"
+      # Handling tags
+      echo "::group::Setting Git config"
       git config user.name ${{ inputs.git-name }}
       git config user.email ${{ inputs.git-email }}
       echo "::endgroup::"
@@ -82,19 +83,26 @@ runs:
       FULL_TAG="v${{ steps.version.outputs.version }}"
       ${{ inputs.version-from == 'commit-message'
           && !inputs.message
-          && 'MESSAGE="$(git log -1 --pretty=format:"%b")"'
+          &&
+      'echo "::group::Getting tag message"
+      MESSAGE="$(git log -1 --pretty=format:"%b")"
+      echo "::endgroup::"'
           || '' }}
+
+      git tag --list
 
       ${{ inputs.release-candidate
           && format(
-      'N=1
-      while
-        RC_TAG="$FULL_TAG.{0}$N"
-        git ref-parse "$RC_TAG" >/dev/null 2>&1
-      do
+      'echo "::group::Getting available tag"
+      N=1
+      RC_TAG="$FULL_TAG"
+      while git rev-parse --verify --quiet "refs/tags/$FULL_TAG.{0}$N" >/dev/null; do
+        echo $N
         ((N++))
       done
-      FULL_TAG=$RC_TAG', inputs.release-candidate-suffix)
+
+      FULL_TAG="$FULL_TAG.{0}$N"
+      echo "::endgroup::"', inputs.release-candidate-suffix)
           || '' }}
 
       echo "tag=$FULL_TAG" >> "$GITHUB_OUTPUT"
@@ -135,6 +143,8 @@ runs:
   - name: Release
     if: ${{ !inputs.dry-run }}
     shell: bash
+    env:
+      GH_TOKEN: ${{ inputs.token }}
     run: |
       gh release create \
         "${{ steps.tag.outputs.tag }}" \
