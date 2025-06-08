@@ -21,6 +21,6 @@ jobs:
           version.txt
         sparse-checkout-cone-mode: false
     - name: Create PR from ${{ github.ref_name }}
-      uses: ./.github/actions/pr-create
+      uses: lime-actions/pr-sync@latest
       with:
         version-from: 'version-file'
