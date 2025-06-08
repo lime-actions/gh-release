@@ -62,6 +62,7 @@ runs:
   using: 'composite'
   steps:
   - name: Check
+    shell: bash
     run: |
       echo "not release candidate: ${{ !inputs.release-candidate }}"
   - name: Get version
