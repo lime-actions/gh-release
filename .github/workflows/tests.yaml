@@ -17,6 +17,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
+        fetch-depth: 0
         fetch-tags: true
         sparse-checkout: |
           action.yaml
@@ -51,7 +52,7 @@ jobs:
       uses: ./
       with:
         version-from: 'version-file'
-        version-source: 'tests/version.txt'
+        version-source: 'tests/version_1.2.alpha.ö.txt'
         release-candidate: true
         dry-run: true
     - name: Check
@@ -63,16 +64,12 @@ jobs:
         fi
     - name: Reset tags
       uses: ./.github/actions/reset-tags
-    - name: Test commit
-      run: |
-        rm test
-        git add test
-        git commit -m 'v0.1.2'
     - name: Increment rc
       id: increment
       uses: ./
       with:
-        version-from: 'commit-message'
+        version-from: 'version-file'
+        version-source: 'tests/version_0.1.2.txt'
         release-candidate: true
         dry-run: true
     - name: Check
@@ -87,7 +84,8 @@ jobs:
       id: release-suffix
       uses: ./
       with:
-        version-from: 'commit-message'
+        version-from: 'version-file'
+        version-source: 'tests/version_0.1.2.txt'
         release-candidate: true
         release-candidate-suffix: 'RC'
         dry-run: true
