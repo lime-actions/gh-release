@@ -89,6 +89,8 @@ runs:
       echo "::endgroup::"'
           || '' }}
 
+      git tag --list
+
       ${{ inputs.release-candidate
           && format(
       'echo "::group::Getting available tag"
@@ -136,7 +138,7 @@ runs:
       echo "::endgroup::"
 
       echo "::group::Pushing changes"
-      git push origin --tags --force ${{ inputs.dry-run && '--dry-run' || '' }}
+      git push origin --tags ${{ inputs.dry-run && '--dry-run' || '' }}
       echo "::endgroup::"
   - name: Release
     if: ${{ !inputs.dry-run }}
