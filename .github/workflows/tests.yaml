@@ -5,6 +5,7 @@ on:
     paths:
     - 'action.yaml'
     - '.github/workflows/tests.yaml'
+    - 'tests/*'
 
 jobs:
   release:
@@ -18,6 +19,7 @@ jobs:
         sparse-checkout: |
           action.yaml
           test
+          tests/version.txt
         sparse-checkout-cone-mode: false
     - name: Test commit
       run: |
