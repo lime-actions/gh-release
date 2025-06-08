@@ -6,6 +6,7 @@ on:
     - 'action.yaml'
     - '.github/workflows/tests.yaml'
     - 'tests/*'
+    - '.github/actions/reset-tags/action.yaml'
 
 jobs:
   release:
@@ -16,10 +17,12 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
+        fetch-tags: true
         sparse-checkout: |
           action.yaml
           test
           tests/version.txt
+          .github/actions/reset-tags/action.yaml
         sparse-checkout-cone-mode: false
     - name: Test commit
       run: |
@@ -43,10 +46,7 @@ jobs:
         elif ! git rev-parse 'latest' >/dev/null 2>&1; then exit 105
         fi
     - name: Reset tags
-      run: |
-        comm -23 <(git tag | sort) <(git ls-remote --tags origin | cut -f2 \
-        | sed 's#refs/tags/##' | sort) \
-        | xargs -n 1 git tag -d
+      uses: ./.github/actions/reset-tags
     - name: Release candidate
       uses: ./
       with:
@@ -62,10 +62,25 @@ jobs:
           exit 102
         fi
     - name: Reset tags
+      uses: ./.github/actions/reset-tags
+    - name: Test commit
       run: |
-        comm -23 <(git tag | sort) <(git ls-remote --tags origin | cut -f2 \
-        | sed 's#refs/tags/##' | sort) \
-        | xargs -n 1 git tag -d
+        rm test
+        git add test
+        git commit -m 'v0.1.2'
+    - name: Increment rc
+      uses: ./
+      with:
+        version-from: 'commit-message'
+        release-candidate: true
+        dry-run: true
+    - name: Check
+      run: |
+        if ! git rev-parse 'v0.1.2.rc2' >/dev/null 2>&1; then
+          exit 101
+        fi
+    - name: Reset tags
+      uses: ./.github/actions/reset-tags
     - name: Release candidate suffix
       id: release-suffix
       uses: ./
