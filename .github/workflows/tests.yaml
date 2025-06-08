@@ -22,7 +22,8 @@ jobs:
         sparse-checkout: |
           action.yaml
           test
-          tests/version.txt
+          tests/version_1.2.alpha.ö.txt
+          tests/version_0.1.2.txt
           .github/actions/reset-tags/action.yaml
         sparse-checkout-cone-mode: false
     - name: Test commit
