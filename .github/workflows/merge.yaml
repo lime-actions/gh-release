@@ -47,5 +47,5 @@ jobs:
         git push
 
         git checkout dev
-        git merge origin/${{ github.event.pull_request.base.ref }} -X ours
+        git merge origin/release-candidate
         git push
