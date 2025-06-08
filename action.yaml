@@ -89,6 +89,8 @@ runs:
       echo "::endgroup::"'
           || '' }}
 
+      git tag --list
+
       ${{ inputs.release-candidate
           && format(
       'echo "::group::Getting available tag"
