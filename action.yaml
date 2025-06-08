@@ -83,17 +83,23 @@ runs:
       FULL_TAG="v${{ steps.version.outputs.version }}"
       ${{ inputs.version-from == 'commit-message'
           && !inputs.message
-          && 'MESSAGE="$(git log -1 --pretty=format:"%b")"'
+          &&
+      'echo "::group::Getting tag message"
+      MESSAGE="$(git log -1 --pretty=format:"%b")"
+      echo "::endgroup::"'
           || '' }}
 
       ${{ inputs.release-candidate
           && format(
-      'N=1
+      'echo "::group::Getting available tag"
+      N=1
       while git tag --list "$FULL_TAG.{0}$N" >/dev/null 2>&1; do
+        echo $N
         ((N++))
       done
 
-      FULL_TAG="$FULL_TAG.rc$N"', inputs.release-candidate-suffix)
+      FULL_TAG="$FULL_TAG.{0}$N"
+      echo "::endgroup::"', inputs.release-candidate-suffix)
           || '' }}
 
       echo "tag=$FULL_TAG" >> "$GITHUB_OUTPUT"
