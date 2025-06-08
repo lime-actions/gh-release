@@ -5,6 +5,7 @@ on:
     paths:
     - 'action.yaml'
     - '.github/workflows/tests.yaml'
+    - 'tests/*'
 
 jobs:
   release:
@@ -18,6 +19,7 @@ jobs:
         sparse-checkout: |
           action.yaml
           test
+          tests/version.txt
         sparse-checkout-cone-mode: false
     - name: Test commit
       run: |
@@ -27,29 +29,14 @@ jobs:
         git add test
         git commit -m 'v1.2.alpha.ö'
     - name: Release from commit
+      id: release-from-commit
       uses: ./
       with:
+        version-from: 'commit-message'
         dry-run: true
     - name: Check
       run: |
-        if ! git rev-parse 'v1.2.alpha.ö' >/dev/null 2>&1
-        then
-          exit 101
-        fi
-    - name: Reset tags
-      run: |
-        comm -23 <(git tag | sort) <(git ls-remote --tags origin | cut -f2 \
-        | sed 's#refs/tags/##' | sort) \
-        | xargs -n 1 git tag -d
-    - name: Release from tag
-      id: release-from-tag
-      uses: ./
-      with:
-        tag: 'v1.2.alpha.ö'
-        dry-run: true
-    - name: Check
-      run: |
-        if [ '${{ steps.release-from-tag.outputs.tag }}' != 'v1.2.alpha.ö' ]; then exit 101
+        if [ '${{ steps.release-from-commit.outputs.tag }}' != 'v1.2.alpha.ö' ]; then exit 101
         elif ! git rev-parse 'v1.2.alpha.ö' >/dev/null 2>&1; then exit 102
         elif ! git rev-parse 'v1.2.alpha' >/dev/null 2>&1; then exit 103
         elif ! git rev-parse 'v1.2' >/dev/null 2>&1; then exit 104
@@ -63,7 +50,8 @@ jobs:
     - name: Release candidate
       uses: ./
       with:
-        tag: 'v1.2.alpha.ö'
+        version-from: 'version-file'
+        version-source: 'tests/version.txt'
         release-candidate: true
         dry-run: true
     - name: Check
@@ -82,7 +70,7 @@ jobs:
       id: release-suffix
       uses: ./
       with:
-        tag: 'v1.2.alpha.ö'
+        version-from: 'commit-message'
         release-candidate: true
         release-candidate-suffix: 'RC'
         dry-run: true
