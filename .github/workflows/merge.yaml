@@ -31,7 +31,7 @@ jobs:
               || '' }}
         sparse-checkout-cone-mode: false
     - name: Merge
-      uses: ./.github/actions/merge
+      uses: lime-actions/merge@latest
       with:
         # paths: '(action.yaml)|(README.md)'
         version-from: 'version-file'
@@ -42,12 +42,10 @@ jobs:
         git config user.name GitHub Actions
         git config user.email github-actions@users.noreply.github.com
 
-        git fetch
-
         git checkout release-candidate
         git merge origin/${{ github.event.pull_request.base.ref }} -X ours
         git push
 
         git checkout dev
-        git merge origin/release-candidate
+        git merge origin/${{ github.event.pull_request.base.ref }} -X ours
         git push
